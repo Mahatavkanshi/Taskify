@@ -1,13 +1,19 @@
 :root {
   --background: #f4efe7;
-  --surface: rgba(255, 250, 243, 0.86);
-  --surface-strong: #fffaf3;
-  --text: #2a241f;
-  --muted: #6d6257;
-  --border: rgba(82, 61, 44, 0.14);
-  --accent: #c6673d;
-  --accent-strong: #9a4824;
-  --shadow: 0 24px 80px rgba(79, 49, 28, 0.12);
+  --surface: rgba(255, 249, 240, 0.86);
+  --surface-strong: #fffdf9;
+  --surface-soft: #fff5ea;
+  --text: #211913;
+  --muted: #68584c;
+  --border: rgba(97, 69, 45, 0.14);
+  --accent: #c46a3d;
+  --accent-strong: #8f441f;
+  --accent-soft: #f3d3bb;
+  --success: #25624b;
+  --success-soft: #dbefe6;
+  --warning: #a34a28;
+  --warning-soft: #fff0e6;
+  --shadow: 0 28px 100px rgba(84, 50, 28, 0.14);
   --radius-xl: 32px;
   --radius-lg: 22px;
   --radius-md: 16px;
@@ -25,11 +31,11 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(242, 202, 160, 0.7), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(197, 103, 61, 0.18), transparent 30%),
-    linear-gradient(135deg, #f7f1e8 0%, #efe5d7 100%);
+    radial-gradient(circle at top left, rgba(255, 218, 180, 0.85), transparent 34%),
+    radial-gradient(circle at right 20%, rgba(231, 179, 128, 0.25), transparent 28%),
+    linear-gradient(135deg, #fbf5ed 0%, #efe2d0 100%);
   color: var(--text);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 button,
@@ -68,20 +74,64 @@ button {
   background: var(--surface);
   backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(244, 197, 156, 0.3), transparent 68%);
+  pointer-events: none;
 }
 
 .eyebrow {
-  margin: 0 0 12px;
+  margin: 0;
   color: var(--accent-strong);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.hero-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.today-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid rgba(143, 68, 31, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.9fr);
+  gap: 18px;
+  align-items: end;
+  margin-top: 18px;
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 7vw, 4.3rem);
-  line-height: 0.95;
+  color: #1f1711;
+  font-size: clamp(2.6rem, 7vw, 4.4rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  max-width: 10ch;
 }
 
 .hero-copy {
@@ -90,6 +140,57 @@ h1 {
   color: var(--muted);
   font-size: 1.05rem;
   line-height: 1.65;
+}
+
+.progress-card {
+  padding: 18px;
+  border: 1px solid rgba(143, 68, 31, 0.14);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 246, 238, 0.95));
+}
+
+.progress-header,
+.progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.progress-header span,
+.progress-meta p {
+  color: var(--muted);
+}
+
+.progress-header strong {
+  font-size: 1.5rem;
+  color: var(--accent-strong);
+}
+
+.progress-track {
+  margin-top: 14px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(196, 106, 61, 0.14);
+  overflow: hidden;
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent) 0%, #e39a64 100%);
+  box-shadow: 0 8px 16px rgba(196, 106, 61, 0.2);
+  transition: width 220ms ease;
+}
+
+.progress-meta {
+  margin-top: 12px;
+}
+
+.progress-meta p {
+  margin: 0;
+  font-size: 0.95rem;
 }
 
 .todo-form {
@@ -113,34 +214,43 @@ h1 {
   padding: 16px 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.88);
   outline: none;
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
 .todo-form input:focus,
 .edit-fields input:focus {
   border-color: rgba(154, 72, 36, 0.45);
   box-shadow: 0 0 0 4px rgba(198, 103, 61, 0.14);
+  transform: translateY(-1px);
 }
 
 .todo-form button,
 .toolbar button,
 .todo-item button {
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 999px;
-  transition: transform 140ms ease, opacity 140ms ease, background-color 140ms ease;
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
 }
 
 .todo-form button {
   padding: 16px 22px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, #dd8c59 100%);
   color: #fff8f2;
+  box-shadow: 0 14px 24px rgba(196, 106, 61, 0.22);
 }
 
 .todo-form button:hover,
 .toolbar button:hover,
 .todo-item button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(48, 31, 19, 0.12);
 }
 
 .stats-row {
@@ -154,13 +264,32 @@ h1 {
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.56);
+  background: rgba(255, 255, 255, 0.68);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.stats-row article:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 28px rgba(64, 41, 25, 0.08);
+}
+
+.stat-card-total {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 232, 219, 0.7));
+}
+
+.stat-card-active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(243, 211, 187, 0.6));
+}
+
+.stat-card-completed {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(219, 239, 230, 0.9));
 }
 
 .stats-row span {
   display: block;
   font-size: 2rem;
   line-height: 1;
+  color: var(--text);
 }
 
 .stats-row p {
@@ -186,14 +315,15 @@ h1 {
 .filter-group button,
 .secondary-button {
   padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.86);
   color: var(--text);
   border: 1px solid var(--border);
 }
 
 .filter-group .is-active {
-  background: #2a241f;
+  background: linear-gradient(135deg, #2a2119 0%, #3f2d1f 100%);
   color: #fffaf3;
+  box-shadow: 0 10px 20px rgba(31, 23, 17, 0.16);
 }
 
 .secondary-button:disabled {
@@ -220,11 +350,17 @@ h1 {
   justify-content: space-between;
   gap: 12px;
   padding: 16px 18px;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.todo-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 30px rgba(79, 49, 28, 0.09);
 }
 
 .todo-item.is-overdue {
   border-color: rgba(154, 72, 36, 0.34);
-  background: linear-gradient(180deg, #fff7f0 0%, var(--surface-strong) 100%);
+  background: linear-gradient(180deg, #fff3e9 0%, var(--surface-strong) 100%);
 }
 
 .todo-main {
@@ -245,6 +381,11 @@ h1 {
   gap: 6px;
 }
 
+.todo-item strong {
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
 .due-date {
   color: var(--muted);
   font-size: 0.9rem;
@@ -263,8 +404,7 @@ h1 {
 }
 
 .completed {
-  color: var(--muted);
-  text-decoration: line-through;
+  color: #85766a;
 }
 
 .todo-actions {
@@ -276,8 +416,12 @@ h1 {
 
 .todo-item button {
   padding: 10px 14px;
-  background: rgba(198, 103, 61, 0.12);
+  background: rgba(198, 103, 61, 0.14);
   color: var(--accent-strong);
+}
+
+.todo-item .secondary-button {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .edit-fields {
@@ -303,6 +447,10 @@ h1 {
 @media (max-width: 720px) {
   .hero-card {
     padding: 22px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
   }
 
   .todo-form {

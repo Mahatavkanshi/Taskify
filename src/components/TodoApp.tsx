@@ -88,6 +88,22 @@ function getDueDateLabel(todo: Todo): string {
     : `Due ${formatDueDate(todo.dueDate)}`;
 }
 
+function getProgressValue(total: number, completed: number): number {
+  if (total === 0) {
+    return 0;
+  }
+
+  return Math.round((completed / total) * 100);
+}
+
+function getTodayLabel(): string {
+  return new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
 export function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState("");
@@ -148,6 +164,9 @@ export function TodoApp() {
 
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
+  const overdueCount = todos.filter(isOverdue).length;
+  const progressValue = getProgressValue(todos.length, completedCount);
+  const todayLabel = getTodayLabel();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -223,12 +242,33 @@ export function TodoApp() {
   return (
     <main className="page-shell">
       <section className="hero-card">
-        <p className="eyebrow">Beginner-friendly Next.js project</p>
-        <h1>Build your daily focus list with Taskify.</h1>
-        <p className="hero-copy">
-          This version keeps the stack simple: Next.js, TypeScript, React state,
-          and localStorage for saving tasks in the browser.
-        </p>
+        <div className="hero-topbar">
+          <p className="eyebrow">Beginner-friendly Next.js project</p>
+          <span className="today-pill">{todayLabel}</span>
+        </div>
+
+        <div className="hero-grid">
+          <div>
+            <h1>Plan the day. Finish what matters.</h1>
+            <p className="hero-copy">
+              Turn busy thoughts into a clear daily rhythm, one focused task at a time.
+            </p>
+          </div>
+
+          <aside className="progress-card">
+            <div className="progress-header">
+              <span>Daily progress</span>
+              <strong>{progressValue}%</strong>
+            </div>
+            <div className="progress-track" aria-hidden="true">
+              <span style={{ width: `${progressValue}%` }} />
+            </div>
+            <div className="progress-meta">
+              <p>{completedCount} completed</p>
+              <p>{overdueCount} overdue</p>
+            </div>
+          </aside>
+        </div>
 
         <form className="todo-form" onSubmit={handleSubmit}>
           <div className="form-field form-field-wide">
@@ -258,15 +298,15 @@ export function TodoApp() {
         </form>
 
         <div className="stats-row">
-          <article>
+          <article className="stat-card stat-card-total">
             <span>{todos.length}</span>
             <p>Total tasks</p>
           </article>
-          <article>
+          <article className="stat-card stat-card-active">
             <span>{activeCount}</span>
             <p>Still active</p>
           </article>
-          <article>
+          <article className="stat-card stat-card-completed">
             <span>{completedCount}</span>
             <p>Completed</p>
           </article>
