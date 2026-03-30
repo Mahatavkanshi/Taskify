@@ -3,11 +3,13 @@ import {
   estimatedTimes,
   getCategoryMeta,
   getDueDateLabel,
+  getEnergyMeta,
   getPriorityMeta,
   isOverdue,
+  energyModes,
   priorities,
 } from "@/lib/todo-config";
-import type { Todo, TodoCategory, TodoPriority } from "@/types/todo";
+import type { Todo, TodoCategory, TodoEnergy, TodoPriority } from "@/types/todo";
 import type { KeyboardEvent } from "react";
 
 type TodoListProps = {
@@ -17,6 +19,7 @@ type TodoListProps = {
   editingDueDate: string;
   editingCategory: TodoCategory;
   editingPriority: TodoPriority;
+  editingEnergy: TodoEnergy;
   editingEstimatedTime: string;
   editingNotes: string;
   removingIds: string[];
@@ -28,6 +31,8 @@ type TodoListProps = {
   onCancelEditing: () => void;
   onSaveEdit: (id: string) => void;
   onDeleteTodo: (id: string) => void;
+  onDuplicateTodo: (id: string) => void;
+  onOpenFocus: (id: string) => void;
   onToggleSubtask: (todoId: string, subtaskId: string) => void;
   onDeleteSubtask: (todoId: string, subtaskId: string) => void;
   onSubtaskDraftChange: (todoId: string, value: string) => void;
@@ -36,6 +41,7 @@ type TodoListProps = {
   onEditingDueDateChange: (value: string) => void;
   onEditingCategoryChange: (value: TodoCategory) => void;
   onEditingPriorityChange: (value: TodoPriority) => void;
+  onEditingEnergyChange: (value: TodoEnergy) => void;
   onEditingEstimatedTimeChange: (value: string) => void;
   onEditingNotesChange: (value: string) => void;
   onEditKeyDown: (event: KeyboardEvent<HTMLInputElement>, id: string) => void;
@@ -48,6 +54,7 @@ export function TodoList({
   editingDueDate,
   editingCategory,
   editingPriority,
+  editingEnergy,
   editingEstimatedTime,
   editingNotes,
   removingIds,
@@ -59,6 +66,8 @@ export function TodoList({
   onCancelEditing,
   onSaveEdit,
   onDeleteTodo,
+  onDuplicateTodo,
+  onOpenFocus,
   onToggleSubtask,
   onDeleteSubtask,
   onSubtaskDraftChange,
@@ -67,6 +76,7 @@ export function TodoList({
   onEditingDueDateChange,
   onEditingCategoryChange,
   onEditingPriorityChange,
+  onEditingEnergyChange,
   onEditingEstimatedTimeChange,
   onEditingNotesChange,
   onEditKeyDown,
@@ -86,6 +96,7 @@ export function TodoList({
         todos.map((todo, index) => {
           const categoryMeta = getCategoryMeta(todo.category);
           const priorityMeta = getPriorityMeta(todo.priority);
+          const energyMeta = getEnergyMeta(todo.energy);
           const isRemoving = removingIds.includes(todo.id);
 
           return (
@@ -152,6 +163,16 @@ export function TodoList({
                             </option>
                           ))}
                         </select>
+                        <select
+                          value={editingEnergy}
+                          onChange={(event) => onEditingEnergyChange(event.target.value as TodoEnergy)}
+                        >
+                          {energyModes.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <textarea
                         rows={3}
@@ -176,6 +197,7 @@ export function TodoList({
                         </div>
                         <div className="todo-tag-row">
                           <span className="estimate-pill">{todo.estimatedTime}</span>
+                          <span className={`energy-pill ${energyMeta.tone}`}>{energyMeta.label}</span>
                           <span className={`priority-pill ${priorityMeta.tone}`}>
                             {priorityMeta.label}
                           </span>
@@ -266,6 +288,12 @@ export function TodoList({
                   <>
                     <button type="button" onClick={() => onStartEditing(todo)}>
                       Edit
+                    </button>
+                    <button type="button" onClick={() => onDuplicateTodo(todo.id)}>
+                      Duplicate
+                    </button>
+                    <button type="button" onClick={() => onOpenFocus(todo.id)}>
+                      Focus
                     </button>
                     <button
                       type="button"

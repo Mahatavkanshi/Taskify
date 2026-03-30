@@ -7,19 +7,23 @@ import { TodoList } from "@/components/TodoList";
 import { TodoSidebar } from "@/components/TodoSidebar";
 import { TodoToast } from "@/components/TodoToast";
 import {
+  calculateStreak,
   createTodo,
   getCategoryMeta,
   getDueDateTimestamp,
+  getEnergyMeta,
   getProgressValue,
+  getTodayKey,
   getTodayLabel,
   isOverdue,
   normalizeTodo,
   type CategoryView,
 } from "@/lib/todo-config";
-import type { Todo, TodoCategory, TodoFilter, TodoPriority } from "@/types/todo";
+import type { Todo, TodoCategory, TodoEnergy, TodoFilter, TodoPriority } from "@/types/todo";
 
 const STORAGE_KEY = "taskify.todos";
 const UI_STATE_KEY = "taskify.ui-state";
+const STREAK_KEY = "taskify.completed-days";
 const filters: TodoFilter[] = ["all", "active", "completed"];
 const removeDelay = 220;
 const toastDelay = 2200;
@@ -38,6 +42,7 @@ export function TodoApp() {
   const [dueDate, setDueDate] = useState("");
   const [category, setCategory] = useState<TodoCategory>("personal");
   const [priority, setPriority] = useState<TodoPriority>("medium");
+  const [energy, setEnergy] = useState<TodoEnergy>("quick-win");
   const [estimatedTime, setEstimatedTime] = useState("30 min");
   const [notes, setNotes] = useState("");
   const [filter, setFilter] = useState<TodoFilter>("all");
@@ -49,16 +54,20 @@ export function TodoApp() {
   const [editingDueDate, setEditingDueDate] = useState("");
   const [editingCategory, setEditingCategory] = useState<TodoCategory>("personal");
   const [editingPriority, setEditingPriority] = useState<TodoPriority>("medium");
+  const [editingEnergy, setEditingEnergy] = useState<TodoEnergy>("quick-win");
   const [editingEstimatedTime, setEditingEstimatedTime] = useState("30 min");
   const [editingNotes, setEditingNotes] = useState("");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const [subtaskDrafts, setSubtaskDrafts] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<ToastState | null>(null);
   const [theme, setTheme] = useState<AppTheme>("light");
+  const [completedDays, setCompletedDays] = useState<string[]>([]);
+  const [focusTodoId, setFocusTodoId] = useState<string | null>(null);
   const hasHydrated = useRef(false);
 
   useEffect(() => {
     const savedTodos = window.localStorage.getItem(STORAGE_KEY);
+    const savedCompletedDays = window.localStorage.getItem(STREAK_KEY);
 
     if (savedTodos) {
       try {
@@ -113,6 +122,20 @@ export function TodoApp() {
       }
     }
 
+    if (savedCompletedDays) {
+      try {
+        const parsedCompletedDays = JSON.parse(savedCompletedDays) as string[];
+
+        if (Array.isArray(parsedCompletedDays)) {
+          startTransition(() => {
+            setCompletedDays(parsedCompletedDays.filter((item) => typeof item === "string"));
+          });
+        }
+      } catch {
+        window.localStorage.removeItem(STREAK_KEY);
+      }
+    }
+
     hasHydrated.current = true;
   }, []);
 
@@ -138,6 +161,14 @@ export function TodoApp() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (!hasHydrated.current) {
+      return;
+    }
+
+    window.localStorage.setItem(STREAK_KEY, JSON.stringify(completedDays));
+  }, [completedDays]);
 
   useEffect(() => {
     if (!toast) {
@@ -187,6 +218,14 @@ export function TodoApp() {
         return firstTodo.starred ? -1 : 1;
       }
 
+      const energyWeight = { "quick-win": 0, errand: 1, "deep-work": 2 } as const;
+      const firstEnergy = energyWeight[firstTodo.energy];
+      const secondEnergy = energyWeight[secondTodo.energy];
+
+      if (firstEnergy !== secondEnergy) {
+        return firstEnergy - secondEnergy;
+      }
+
       const firstDueDate = getDueDateTimestamp(firstTodo.dueDate);
       const secondDueDate = getDueDateTimestamp(secondTodo.dueDate);
 
@@ -210,6 +249,7 @@ export function TodoApp() {
   const completedCount = todos.length - activeCount;
   const overdueCount = todos.filter(isOverdue).length;
   const progressValue = getProgressValue(todos.length, completedCount);
+  const streakCount = calculateStreak(completedDays);
   const todayLabel = getTodayLabel();
   const selectedCategoryMeta = getCategoryMeta(activeCategory === "all" ? "personal" : activeCategory);
   const selectedCategoryTitle =
@@ -220,6 +260,7 @@ export function TodoApp() {
     activeCategory === "all"
       ? "See every task in one place and keep your day moving."
       : `Focused view for your ${selectedCategoryMeta.label.toLowerCase()} list.`;
+  const focusTodo = focusTodoId ? todos.find((todo) => todo.id === focusTodoId) ?? null : null;
 
   function getCategoryCount(categoryId: TodoCategory): number {
     return todos.filter((todo) => todo.category === categoryId).length;
