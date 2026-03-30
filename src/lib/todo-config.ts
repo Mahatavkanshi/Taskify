@@ -1,4 +1,4 @@
-import type { Todo, TodoCategory, TodoPriority, TodoSubtask } from "@/types/todo";
+import type { Todo, TodoCategory, TodoEnergy, TodoPriority, TodoSubtask } from "@/types/todo";
 
 export const categories = [
   { id: "work", label: "Work", emoji: "💼", tone: "tone-work" },
@@ -24,6 +24,16 @@ export const priorities = [
 
 export const estimatedTimes = ["10 min", "30 min", "1 hour", "2 hours"] as const;
 
+export const energyModes = [
+  { id: "quick-win", label: "Quick win", tone: "energy-quick" },
+  { id: "deep-work", label: "Deep work", tone: "energy-deep" },
+  { id: "errand", label: "Errand", tone: "energy-errand" },
+] as const satisfies Array<{
+  id: TodoEnergy;
+  label: string;
+  tone: string;
+}>;
+
 export type CategoryView = "all" | TodoCategory;
 
 export function normalizeCategory(category?: string): TodoCategory {
@@ -38,6 +48,12 @@ export function normalizePriority(priority?: string): TodoPriority {
     : "medium";
 }
 
+export function normalizeEnergy(energy?: string): TodoEnergy {
+  return energyModes.some((item) => item.id === energy)
+    ? (energy as TodoEnergy)
+    : "quick-win";
+}
+
 export function normalizeTodo(todo: Partial<Todo>): Todo {
   return {
     id: todo.id ?? crypto.randomUUID(),
@@ -47,6 +63,7 @@ export function normalizeTodo(todo: Partial<Todo>): Todo {
     dueDate: todo.dueDate ?? "",
     category: normalizeCategory(todo.category),
     priority: normalizePriority(todo.priority),
+    energy: normalizeEnergy(todo.energy),
     starred: Boolean(todo.starred),
     estimatedTime:
       typeof todo.estimatedTime === "string" && todo.estimatedTime.length > 0
@@ -72,6 +89,7 @@ export function createTodo(
   dueDate: string,
   category: TodoCategory,
   priority: TodoPriority,
+  energy: TodoEnergy,
   estimatedTime: string,
   notes: string,
 ): Todo {
@@ -83,6 +101,7 @@ export function createTodo(
     dueDate,
     category,
     priority,
+    energy,
     starred: false,
     estimatedTime,
     notes,
@@ -96,6 +115,43 @@ export function getCategoryMeta(category: TodoCategory) {
 
 export function getPriorityMeta(priority: TodoPriority) {
   return priorities.find((item) => item.id === priority) ?? priorities[1];
+}
+
+export function getEnergyMeta(energy: TodoEnergy) {
+  return energyModes.find((item) => item.id === energy) ?? energyModes[0];
+}
+
+export function getTodayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function calculateStreak(completedDates: string[]): number {
+  const uniqueDates = [...new Set(completedDates)].sort().reverse();
+
+  if (uniqueDates.length === 0) {
+    return 0;
+  }
+
+  let streak = 0;
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+
+  if (uniqueDates[0] !== getTodayKey()) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  for (const date of uniqueDates) {
+    const cursorKey = cursor.toISOString().slice(0, 10);
+
+    if (date !== cursorKey) {
+      break;
+    }
+
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
 }
 
 export function formatDueDate(dueDate: string): string {

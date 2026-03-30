@@ -4,6 +4,8 @@ export type TodoCategory = "work" | "personal" | "study" | "groceries";
 
 export type TodoPriority = "low" | "medium" | "high";
 
+export type TodoEnergy = "quick-win" | "deep-work" | "errand";
+
 export type TodoSubtask = {
   id: string;
   title: string;
@@ -18,6 +20,7 @@ export type Todo = {
   dueDate: string;
   category: TodoCategory;
   priority: TodoPriority;
+  energy: TodoEnergy;
   starred: boolean;
   estimatedTime: string;
   notes: string;
