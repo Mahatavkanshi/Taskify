@@ -118,7 +118,7 @@ export function TodoList({
                       </div>
                     </div>
                   ) : (
-                    <span>
+                    <div className="todo-copy">
                       <div className="todo-heading-row">
                         <strong className={todo.completed ? "completed" : ""}>{todo.title}</strong>
                         <div className="todo-tag-row">
@@ -135,7 +135,7 @@ export function TodoList({
                       >
                         {getDueDateLabel(todo)}
                       </small>
-                    </span>
+                    </div>
                   )}
                 </label>
               </div>

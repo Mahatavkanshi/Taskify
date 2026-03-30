@@ -2,8 +2,10 @@
 
 import { FormEvent, KeyboardEvent, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { TodoComposer } from "@/components/TodoComposer";
+import { TodoHighlights } from "@/components/TodoHighlights";
 import { TodoList } from "@/components/TodoList";
 import { TodoSidebar } from "@/components/TodoSidebar";
+import { TodoToast } from "@/components/TodoToast";
 import {
   createTodo,
   getCategoryMeta,
@@ -17,8 +19,16 @@ import {
 import type { Todo, TodoCategory, TodoFilter, TodoPriority } from "@/types/todo";
 
 const STORAGE_KEY = "taskify.todos";
+const UI_STATE_KEY = "taskify.ui-state";
 const filters: TodoFilter[] = ["all", "active", "completed"];
 const removeDelay = 220;
+const toastDelay = 2200;
+
+type ToastState = {
+  id: number;
+  message: string;
+  tone: "success" | "info";
+};
 
 export function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -35,6 +45,7 @@ export function TodoApp() {
   const [editingCategory, setEditingCategory] = useState<TodoCategory>("personal");
   const [editingPriority, setEditingPriority] = useState<TodoPriority>("medium");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const hasHydrated = useRef(false);
 
   useEffect(() => {
@@ -51,6 +62,36 @@ export function TodoApp() {
       }
     }
 
+    const savedUiState = window.localStorage.getItem(UI_STATE_KEY);
+
+    if (savedUiState) {
+      try {
+        const parsedUiState = JSON.parse(savedUiState) as {
+          filter?: TodoFilter;
+          searchTerm?: string;
+          activeCategory?: CategoryView;
+        };
+
+        if (parsedUiState.filter && filters.includes(parsedUiState.filter)) {
+          setFilter(parsedUiState.filter);
+        }
+
+        if (typeof parsedUiState.searchTerm === "string") {
+          setSearchTerm(parsedUiState.searchTerm);
+        }
+
+        if (
+          parsedUiState.activeCategory === "all" ||
+          (typeof parsedUiState.activeCategory === "string" &&
+            ["work", "personal", "study", "groceries"].includes(parsedUiState.activeCategory))
+        ) {
+          setActiveCategory(parsedUiState.activeCategory);
+        }
+      } catch {
+        window.localStorage.removeItem(UI_STATE_KEY);
+      }
+    }
+
     hasHydrated.current = true;
   }, []);
 
@@ -61,6 +102,31 @@ export function TodoApp() {
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
   }, [todos]);
+
+  useEffect(() => {
+    if (!hasHydrated.current) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      UI_STATE_KEY,
+      JSON.stringify({ activeCategory, filter, searchTerm }),
+    );
+  }, [activeCategory, filter, searchTerm]);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setToast((currentToast) =>
+        currentToast?.id === toast.id ? null : currentToast,
+      );
+    }, toastDelay);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
 
   const filteredTodos = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -124,6 +190,10 @@ export function TodoApp() {
     return todos.filter((todo) => todo.category === categoryId).length;
   }
 
+  function showToast(message: string, tone: ToastState["tone"] = "success") {
+    setToast({ id: Date.now(), message, tone });
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -138,6 +208,7 @@ export function TodoApp() {
     setDueDate("");
     setCategory("personal");
     setPriority("medium");
+    showToast(`Added "${trimmedTitle}"`);
   }
 
   function toggleTodo(id: string) {
@@ -155,10 +226,16 @@ export function TodoApp() {
 
     setRemovingIds((currentIds) => [...currentIds, id]);
 
+    const removedTodo = todos.find((todo) => todo.id === id);
+
     window.setTimeout(() => {
       setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
       setRemovingIds((currentIds) => currentIds.filter((item) => item !== id));
     }, removeDelay);
+
+    if (removedTodo) {
+      showToast(`Removed "${removedTodo.title}"`, "info");
+    }
   }
 
   function clearCompleted() {
@@ -174,6 +251,8 @@ export function TodoApp() {
       setTodos((currentTodos) => currentTodos.filter((todo) => !todo.completed));
       setRemovingIds((currentIds) => currentIds.filter((id) => !completedIds.includes(id)));
     }, removeDelay);
+
+    showToast(`Cleared ${completedIds.length} completed task${completedIds.length === 1 ? "" : "s"}`);
   }
 
   function startEditing(todo: Todo) {
@@ -214,6 +293,7 @@ export function TodoApp() {
     );
 
     cancelEditing();
+    showToast(`Updated "${trimmedTitle}"`);
   }
 
   function handleEditKeyDown(event: KeyboardEvent<HTMLInputElement>, id: string) {
@@ -305,6 +385,8 @@ export function TodoApp() {
               </article>
             </div>
 
+            <TodoHighlights todos={filteredTodos} />
+
             <div className="toolbar">
               <div className="toolbar-group">
                 <div className="filter-group" role="tablist" aria-label="Todo filters">
@@ -366,6 +448,8 @@ export function TodoApp() {
           </section>
         </div>
       </section>
+
+      {toast ? <TodoToast message={toast.message} tone={toast.tone} /> : null}
     </main>
   );
 }

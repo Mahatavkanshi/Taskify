@@ -485,6 +485,51 @@ h1 {
   margin: 10px 0 0;
 }
 
+.highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.highlight-card {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(240, 252, 246, 0.92));
+}
+
+.highlight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.highlight-head strong {
+  font-size: 1.4rem;
+}
+
+.highlight-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.highlight-item {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(27, 87, 74, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.highlight-empty {
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
 .todo-list {
   display: grid;
   gap: 14px;
@@ -527,6 +572,13 @@ h1 {
   gap: 8px;
   min-width: 0;
   width: 100%;
+}
+
+.todo-copy {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
 .todo-item input[type="checkbox"] {
@@ -625,6 +677,33 @@ h1 {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 252, 241, 0.98));
 }
 
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(27, 87, 74, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 36px rgba(29, 110, 105, 0.18);
+  animation: toast-in 220ms ease both;
+  z-index: 20;
+}
+
+.toast-dot {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 999px;
+  background: #2e958d;
+}
+
+.toast-info .toast-dot {
+  background: #29619c;
+}
+
 .tone-work .category-icon,
 .category-pill.tone-work {
   background: rgba(214, 242, 255, 0.98);
@@ -676,6 +755,18 @@ h1 {
   }
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -707,6 +798,7 @@ h1 {
   }
 
   .stats-row,
+  .highlight-grid,
   .edit-grid,
   .sidebar-summary {
     grid-template-columns: 1fr;
@@ -720,5 +812,11 @@ h1 {
   .todo-item button,
   .secondary-button {
     width: 100%;
+  }
+
+  .toast {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
   }
 }

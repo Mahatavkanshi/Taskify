@@ -112,15 +112,39 @@ export function getDueDateTimestamp(dueDate: string): number {
   return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp;
 }
 
+export function getStartOfToday(): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return today.getTime();
+}
+
 export function isOverdue(todo: Todo): boolean {
   if (!todo.dueDate || todo.completed) {
     return false;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  return getDueDateTimestamp(todo.dueDate) < getStartOfToday();
+}
 
-  return getDueDateTimestamp(todo.dueDate) < today.getTime();
+export function isDueToday(todo: Todo): boolean {
+  if (!todo.dueDate || todo.completed) {
+    return false;
+  }
+
+  return getDueDateTimestamp(todo.dueDate) === getStartOfToday();
+}
+
+export function isUpcoming(todo: Todo): boolean {
+  if (!todo.dueDate || todo.completed) {
+    return false;
+  }
+
+  const dueDate = getDueDateTimestamp(todo.dueDate);
+  const startOfToday = getStartOfToday();
+  const nextWeek = startOfToday + 7 * 24 * 60 * 60 * 1000;
+
+  return dueDate > startOfToday && dueDate <= nextWeek;
 }
 
 export function getDueDateLabel(todo: Todo): string {
