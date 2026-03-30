@@ -72,21 +72,23 @@ export function TodoApp() {
           activeCategory?: CategoryView;
         };
 
-        if (parsedUiState.filter && filters.includes(parsedUiState.filter)) {
-          setFilter(parsedUiState.filter);
-        }
+        startTransition(() => {
+          if (parsedUiState.filter && filters.includes(parsedUiState.filter)) {
+            setFilter(parsedUiState.filter);
+          }
 
-        if (typeof parsedUiState.searchTerm === "string") {
-          setSearchTerm(parsedUiState.searchTerm);
-        }
+          if (typeof parsedUiState.searchTerm === "string") {
+            setSearchTerm(parsedUiState.searchTerm);
+          }
 
-        if (
-          parsedUiState.activeCategory === "all" ||
-          (typeof parsedUiState.activeCategory === "string" &&
-            ["work", "personal", "study", "groceries"].includes(parsedUiState.activeCategory))
-        ) {
-          setActiveCategory(parsedUiState.activeCategory);
-        }
+          if (
+            parsedUiState.activeCategory === "all" ||
+            (typeof parsedUiState.activeCategory === "string" &&
+              ["work", "personal", "study", "groceries"].includes(parsedUiState.activeCategory))
+          ) {
+            setActiveCategory(parsedUiState.activeCategory);
+          }
+        });
       } catch {
         window.localStorage.removeItem(UI_STATE_KEY);
       }
