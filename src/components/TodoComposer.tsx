@@ -1,5 +1,5 @@
-import { categories, estimatedTimes, priorities } from "@/lib/todo-config";
-import type { TodoCategory, TodoPriority } from "@/types/todo";
+import { categories, energyModes, estimatedTimes, priorities } from "@/lib/todo-config";
+import type { TodoCategory, TodoEnergy, TodoPriority } from "@/types/todo";
 import type { FormEvent } from "react";
 
 type TodoComposerProps = {
@@ -7,12 +7,14 @@ type TodoComposerProps = {
   dueDate: string;
   category: TodoCategory;
   priority: TodoPriority;
+  energy: TodoEnergy;
   estimatedTime: string;
   notes: string;
   onTitleChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
   onCategoryChange: (value: TodoCategory) => void;
   onPriorityChange: (value: TodoPriority) => void;
+  onEnergyChange: (value: TodoEnergy) => void;
   onEstimatedTimeChange: (value: string) => void;
   onNotesChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -23,12 +25,14 @@ export function TodoComposer({
   dueDate,
   category,
   priority,
+  energy,
   estimatedTime,
   notes,
   onTitleChange,
   onDueDateChange,
   onCategoryChange,
   onPriorityChange,
+  onEnergyChange,
   onEstimatedTimeChange,
   onNotesChange,
   onSubmit,
@@ -106,6 +110,23 @@ export function TodoComposer({
           {estimatedTimes.map((item) => (
             <option key={item} value={item}>
               {item}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-field">
+        <label className="sr-only" htmlFor="todo-energy">
+          Energy label
+        </label>
+        <select
+          id="todo-energy"
+          value={energy}
+          onChange={(event) => onEnergyChange(event.target.value as TodoEnergy)}
+        >
+          {energyModes.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
             </option>
           ))}
         </select>
