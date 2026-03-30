@@ -6,6 +6,7 @@ type TodoSidebarProps = {
   progressValue: number;
   overdueCount: number;
   totalCount: number;
+  streakCount: number;
   theme: "light" | "dusk";
   getCategoryCount: (categoryId: (typeof categories)[number]["id"]) => number;
   onSelectCategory: (category: CategoryView) => void;
@@ -18,6 +19,7 @@ export function TodoSidebar({
   progressValue,
   overdueCount,
   totalCount,
+  streakCount,
   theme,
   getCategoryCount,
   onSelectCategory,
@@ -85,6 +87,10 @@ export function TodoSidebar({
         <article>
           <span>{overdueCount}</span>
           <p>Need attention</p>
+        </article>
+        <article>
+          <span>{streakCount}</span>
+          <p>Day streak</p>
         </article>
       </div>
     </aside>
