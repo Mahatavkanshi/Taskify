@@ -510,6 +510,7 @@ export function TodoApp() {
           progressValue={progressValue}
           overdueCount={overdueCount}
           totalCount={todos.length}
+          streakCount={streakCount}
           getCategoryCount={getCategoryCount}
           onSelectCategory={setActiveCategory}
           theme={theme}
@@ -559,12 +560,14 @@ export function TodoApp() {
               dueDate={dueDate}
               category={category}
               priority={priority}
+              energy={energy}
               estimatedTime={estimatedTime}
               notes={notes}
               onTitleChange={setTitle}
               onDueDateChange={setDueDate}
               onCategoryChange={setCategory}
               onPriorityChange={setPriority}
+              onEnergyChange={setEnergy}
               onEstimatedTimeChange={setEstimatedTime}
               onNotesChange={setNotes}
               onSubmit={handleSubmit}
@@ -641,12 +644,15 @@ export function TodoApp() {
               editingDueDate={editingDueDate}
               editingCategory={editingCategory}
               editingPriority={editingPriority}
+              editingEnergy={editingEnergy}
               editingEstimatedTime={editingEstimatedTime}
               editingNotes={editingNotes}
               removingIds={removingIds}
               starredOnly={starredOnly}
               onToggleTodo={toggleTodo}
               onToggleStar={toggleStar}
+              onDuplicateTodo={duplicateTodo}
+              onOpenFocus={setFocusTodoId}
               onToggleSubtask={toggleSubtask}
               onStartEditing={startEditing}
               onCancelEditing={cancelEditing}
@@ -659,6 +665,7 @@ export function TodoApp() {
               onEditingDueDateChange={setEditingDueDate}
               onEditingCategoryChange={setEditingCategory}
               onEditingPriorityChange={setEditingPriority}
+              onEditingEnergyChange={setEditingEnergy}
               onEditingEstimatedTimeChange={setEditingEstimatedTime}
               onEditingNotesChange={setEditingNotes}
               onEditKeyDown={handleEditKeyDown}
