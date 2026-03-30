@@ -1,5 +1,6 @@
 import {
   categories,
+  estimatedTimes,
   getCategoryMeta,
   getDueDateLabel,
   getPriorityMeta,
@@ -16,16 +17,27 @@ type TodoListProps = {
   editingDueDate: string;
   editingCategory: TodoCategory;
   editingPriority: TodoPriority;
+  editingEstimatedTime: string;
+  editingNotes: string;
   removingIds: string[];
+  subtaskDrafts: Record<string, string>;
+  starredOnly: boolean;
   onToggleTodo: (id: string) => void;
+  onToggleStar: (id: string) => void;
   onStartEditing: (todo: Todo) => void;
   onCancelEditing: () => void;
   onSaveEdit: (id: string) => void;
   onDeleteTodo: (id: string) => void;
+  onToggleSubtask: (todoId: string, subtaskId: string) => void;
+  onDeleteSubtask: (todoId: string, subtaskId: string) => void;
+  onSubtaskDraftChange: (todoId: string, value: string) => void;
+  onAddSubtask: (todoId: string) => void;
   onEditingTitleChange: (value: string) => void;
   onEditingDueDateChange: (value: string) => void;
   onEditingCategoryChange: (value: TodoCategory) => void;
   onEditingPriorityChange: (value: TodoPriority) => void;
+  onEditingEstimatedTimeChange: (value: string) => void;
+  onEditingNotesChange: (value: string) => void;
   onEditKeyDown: (event: KeyboardEvent<HTMLInputElement>, id: string) => void;
 };
 
@@ -36,16 +48,27 @@ export function TodoList({
   editingDueDate,
   editingCategory,
   editingPriority,
+  editingEstimatedTime,
+  editingNotes,
   removingIds,
+  subtaskDrafts,
+  starredOnly,
   onToggleTodo,
+  onToggleStar,
   onStartEditing,
   onCancelEditing,
   onSaveEdit,
   onDeleteTodo,
+  onToggleSubtask,
+  onDeleteSubtask,
+  onSubtaskDraftChange,
+  onAddSubtask,
   onEditingTitleChange,
   onEditingDueDateChange,
   onEditingCategoryChange,
   onEditingPriorityChange,
+  onEditingEstimatedTimeChange,
+  onEditingNotesChange,
   onEditKeyDown,
 }: TodoListProps) {
   return (
@@ -53,7 +76,11 @@ export function TodoList({
       {todos.length === 0 ? (
         <div className="empty-state">
           <h3>No tasks here yet</h3>
-          <p>Try another filter, search for a different task, or add a new one here.</p>
+          <p>
+            {starredOnly
+              ? "No starred tasks match this view yet."
+              : "Try another filter, search for a different task, or add a new one here."}
+          </p>
         </div>
       ) : (
         todos.map((todo, index) => {
@@ -115,13 +142,40 @@ export function TodoList({
                             </option>
                           ))}
                         </select>
+                        <select
+                          value={editingEstimatedTime}
+                          onChange={(event) => onEditingEstimatedTimeChange(event.target.value)}
+                        >
+                          {estimatedTimes.map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                        </select>
                       </div>
+                      <textarea
+                        rows={3}
+                        placeholder="Add notes for this task"
+                        value={editingNotes}
+                        onChange={(event) => onEditingNotesChange(event.target.value)}
+                      />
                     </div>
                   ) : (
                     <div className="todo-copy">
                       <div className="todo-heading-row">
-                        <strong className={todo.completed ? "completed" : ""}>{todo.title}</strong>
+                        <div className="todo-title-row">
+                          <button
+                            type="button"
+                            className={`star-button${todo.starred ? " is-starred" : ""}`}
+                            onClick={() => onToggleStar(todo.id)}
+                            aria-label={todo.starred ? "Unstar task" : "Star task"}
+                          >
+                            {todo.starred ? "★" : "☆"}
+                          </button>
+                          <strong className={todo.completed ? "completed" : ""}>{todo.title}</strong>
+                        </div>
                         <div className="todo-tag-row">
+                          <span className="estimate-pill">{todo.estimatedTime}</span>
                           <span className={`priority-pill ${priorityMeta.tone}`}>
                             {priorityMeta.label}
                           </span>
@@ -135,6 +189,64 @@ export function TodoList({
                       >
                         {getDueDateLabel(todo)}
                       </small>
+
+                      {todo.notes ? <p className="todo-notes">{todo.notes}</p> : null}
+
+                      <div className="subtask-block">
+                        <div className="subtask-header">
+                          <span>Subtasks</span>
+                          <small>
+                            {todo.subtasks.filter((subtask) => subtask.completed).length}/
+                            {todo.subtasks.length || 0}
+                          </small>
+                        </div>
+
+                        {todo.subtasks.length > 0 ? (
+                          <div className="subtask-list">
+                            {todo.subtasks.map((subtask) => (
+                              <div key={subtask.id} className="subtask-item">
+                                <label>
+                                  <input
+                                    type="checkbox"
+                                    checked={subtask.completed}
+                                    onChange={() => onToggleSubtask(todo.id, subtask.id)}
+                                  />
+                                  <span className={subtask.completed ? "completed" : ""}>
+                                    {subtask.title}
+                                  </span>
+                                </label>
+                                <button
+                                  type="button"
+                                  className="subtask-delete"
+                                  onClick={() => onDeleteSubtask(todo.id, subtask.id)}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="subtask-empty">No subtasks yet.</p>
+                        )}
+
+                        <div className="subtask-form">
+                          <input
+                            type="text"
+                            placeholder="Add a subtask"
+                            value={subtaskDrafts[todo.id] ?? ""}
+                            onChange={(event) => onSubtaskDraftChange(todo.id, event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                onAddSubtask(todo.id);
+                              }
+                            }}
+                          />
+                          <button type="button" onClick={() => onAddSubtask(todo.id)}>
+                            Add
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </label>

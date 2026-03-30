@@ -30,13 +30,18 @@ type ToastState = {
   tone: "success" | "info";
 };
 
+type AppTheme = "light" | "dusk";
+
 export function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [category, setCategory] = useState<TodoCategory>("personal");
   const [priority, setPriority] = useState<TodoPriority>("medium");
+  const [estimatedTime, setEstimatedTime] = useState("30 min");
+  const [notes, setNotes] = useState("");
   const [filter, setFilter] = useState<TodoFilter>("all");
+  const [starredOnly, setStarredOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryView>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -44,8 +49,12 @@ export function TodoApp() {
   const [editingDueDate, setEditingDueDate] = useState("");
   const [editingCategory, setEditingCategory] = useState<TodoCategory>("personal");
   const [editingPriority, setEditingPriority] = useState<TodoPriority>("medium");
+  const [editingEstimatedTime, setEditingEstimatedTime] = useState("30 min");
+  const [editingNotes, setEditingNotes] = useState("");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
+  const [subtaskDrafts, setSubtaskDrafts] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [theme, setTheme] = useState<AppTheme>("light");
   const hasHydrated = useRef(false);
 
   useEffect(() => {
@@ -68,8 +77,10 @@ export function TodoApp() {
       try {
         const parsedUiState = JSON.parse(savedUiState) as {
           filter?: TodoFilter;
+          starredOnly?: boolean;
           searchTerm?: string;
           activeCategory?: CategoryView;
+          theme?: AppTheme;
         };
 
         startTransition(() => {
@@ -81,12 +92,20 @@ export function TodoApp() {
             setSearchTerm(parsedUiState.searchTerm);
           }
 
+          if (typeof parsedUiState.starredOnly === "boolean") {
+            setStarredOnly(parsedUiState.starredOnly);
+          }
+
           if (
             parsedUiState.activeCategory === "all" ||
             (typeof parsedUiState.activeCategory === "string" &&
               ["work", "personal", "study", "groceries"].includes(parsedUiState.activeCategory))
           ) {
             setActiveCategory(parsedUiState.activeCategory);
+          }
+
+          if (parsedUiState.theme === "light" || parsedUiState.theme === "dusk") {
+            setTheme(parsedUiState.theme);
           }
         });
       } catch {
@@ -112,9 +131,13 @@ export function TodoApp() {
 
     window.localStorage.setItem(
       UI_STATE_KEY,
-      JSON.stringify({ activeCategory, filter, searchTerm }),
+      JSON.stringify({ activeCategory, filter, starredOnly, searchTerm, theme }),
     );
-  }, [activeCategory, filter, searchTerm]);
+  }, [activeCategory, filter, searchTerm, starredOnly, theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     if (!toast) {
@@ -151,9 +174,19 @@ export function TodoApp() {
     const bySearch =
       normalizedSearch.length === 0
         ? byStatus
-        : byStatus.filter((todo) => todo.title.toLowerCase().includes(normalizedSearch));
+        : byStatus.filter(
+            (todo) =>
+              todo.title.toLowerCase().includes(normalizedSearch) ||
+              todo.notes.toLowerCase().includes(normalizedSearch),
+          );
 
-    return [...bySearch].sort((firstTodo, secondTodo) => {
+    const byStar = starredOnly ? bySearch.filter((todo) => todo.starred) : bySearch;
+
+    return [...byStar].sort((firstTodo, secondTodo) => {
+      if (firstTodo.starred !== secondTodo.starred) {
+        return firstTodo.starred ? -1 : 1;
+      }
+
       const firstDueDate = getDueDateTimestamp(firstTodo.dueDate);
       const secondDueDate = getDueDateTimestamp(secondTodo.dueDate);
 
@@ -171,7 +204,7 @@ export function TodoApp() {
 
       return secondTodo.createdAt - firstTodo.createdAt;
     });
-  }, [activeCategory, filter, searchTerm, todos]);
+  }, [activeCategory, filter, searchTerm, starredOnly, todos]);
 
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
@@ -205,11 +238,13 @@ export function TodoApp() {
       return;
     }
 
-    setTodos((currentTodos) => [createTodo(trimmedTitle, dueDate, category, priority), ...currentTodos]);
+    setTodos((currentTodos) => [createTodo(trimmedTitle, dueDate, category, priority, estimatedTime, notes.trim()), ...currentTodos]);
     setTitle("");
     setDueDate("");
     setCategory("personal");
     setPriority("medium");
+    setEstimatedTime("30 min");
+    setNotes("");
     showToast(`Added "${trimmedTitle}"`);
   }
 
@@ -219,6 +254,73 @@ export function TodoApp() {
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
       ),
     );
+  }
+
+  function toggleStar(id: string) {
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === id ? { ...todo, starred: !todo.starred } : todo,
+      ),
+    );
+  }
+
+  function toggleSubtask(todoId: string, subtaskId: string) {
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              subtasks: todo.subtasks.map((subtask) =>
+                subtask.id === subtaskId
+                  ? { ...subtask, completed: !subtask.completed }
+                  : subtask,
+              ),
+            }
+          : todo,
+      ),
+    );
+  }
+
+  function deleteSubtask(todoId: string, subtaskId: string) {
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              subtasks: todo.subtasks.filter((subtask) => subtask.id !== subtaskId),
+            }
+          : todo,
+      ),
+    );
+    showToast("Removed subtask", "info");
+  }
+
+  function updateSubtaskDraft(todoId: string, value: string) {
+    setSubtaskDrafts((currentDrafts) => ({ ...currentDrafts, [todoId]: value }));
+  }
+
+  function addSubtask(todoId: string) {
+    const draft = (subtaskDrafts[todoId] ?? "").trim();
+
+    if (!draft) {
+      return;
+    }
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              subtasks: [
+                ...todo.subtasks,
+                { id: crypto.randomUUID(), title: draft, completed: false },
+              ],
+            }
+          : todo,
+      ),
+    );
+    setSubtaskDrafts((currentDrafts) => ({ ...currentDrafts, [todoId]: "" }));
+    showToast(`Added subtask "${draft}"`);
   }
 
   function requestDeleteTodo(id: string) {
@@ -263,6 +365,8 @@ export function TodoApp() {
     setEditingDueDate(todo.dueDate);
     setEditingCategory(todo.category);
     setEditingPriority(todo.priority);
+    setEditingEstimatedTime(todo.estimatedTime);
+    setEditingNotes(todo.notes);
   }
 
   function cancelEditing() {
@@ -271,6 +375,8 @@ export function TodoApp() {
     setEditingDueDate("");
     setEditingCategory("personal");
     setEditingPriority("medium");
+    setEditingEstimatedTime("30 min");
+    setEditingNotes("");
   }
 
   function saveEdit(id: string) {
@@ -289,6 +395,8 @@ export function TodoApp() {
               dueDate: editingDueDate,
               category: editingCategory,
               priority: editingPriority,
+              estimatedTime: editingEstimatedTime,
+              notes: editingNotes.trim(),
             }
           : todo,
       ),
@@ -320,6 +428,8 @@ export function TodoApp() {
           totalCount={todos.length}
           getCategoryCount={getCategoryCount}
           onSelectCategory={setActiveCategory}
+          theme={theme}
+          onToggleTheme={() => setTheme((currentTheme) => (currentTheme === "light" ? "dusk" : "light"))}
         />
 
         <div className="main-card">
@@ -365,10 +475,14 @@ export function TodoApp() {
               dueDate={dueDate}
               category={category}
               priority={priority}
+              estimatedTime={estimatedTime}
+              notes={notes}
               onTitleChange={setTitle}
               onDueDateChange={setDueDate}
               onCategoryChange={setCategory}
               onPriorityChange={setPriority}
+              onEstimatedTimeChange={setEstimatedTime}
+              onNotesChange={setNotes}
               onSubmit={handleSubmit}
             />
 
@@ -404,6 +518,14 @@ export function TodoApp() {
                   ))}
                 </div>
 
+                <button
+                  type="button"
+                  className={starredOnly ? "filter-star is-active" : "filter-star"}
+                  onClick={() => setStarredOnly((currentValue) => !currentValue)}
+                >
+                  {starredOnly ? "Starred only" : "Show starred"}
+                </button>
+
                 <div className="search-field">
                   <label className="sr-only" htmlFor="todo-search">
                     Search todos
@@ -435,17 +557,28 @@ export function TodoApp() {
               editingDueDate={editingDueDate}
               editingCategory={editingCategory}
               editingPriority={editingPriority}
+              editingEstimatedTime={editingEstimatedTime}
+              editingNotes={editingNotes}
               removingIds={removingIds}
+              starredOnly={starredOnly}
               onToggleTodo={toggleTodo}
+              onToggleStar={toggleStar}
+              onToggleSubtask={toggleSubtask}
               onStartEditing={startEditing}
               onCancelEditing={cancelEditing}
               onSaveEdit={saveEdit}
               onDeleteTodo={requestDeleteTodo}
+              onDeleteSubtask={deleteSubtask}
+              onSubtaskDraftChange={updateSubtaskDraft}
+              onAddSubtask={addSubtask}
               onEditingTitleChange={setEditingTitle}
               onEditingDueDateChange={setEditingDueDate}
               onEditingCategoryChange={setEditingCategory}
               onEditingPriorityChange={setEditingPriority}
+              onEditingEstimatedTimeChange={setEditingEstimatedTime}
+              onEditingNotesChange={setEditingNotes}
               onEditKeyDown={handleEditKeyDown}
+              subtaskDrafts={subtaskDrafts}
             />
           </section>
         </div>

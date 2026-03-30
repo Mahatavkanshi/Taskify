@@ -1,4 +1,4 @@
-import { categories, priorities } from "@/lib/todo-config";
+import { categories, estimatedTimes, priorities } from "@/lib/todo-config";
 import type { TodoCategory, TodoPriority } from "@/types/todo";
 import type { FormEvent } from "react";
 
@@ -7,10 +7,14 @@ type TodoComposerProps = {
   dueDate: string;
   category: TodoCategory;
   priority: TodoPriority;
+  estimatedTime: string;
+  notes: string;
   onTitleChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
   onCategoryChange: (value: TodoCategory) => void;
   onPriorityChange: (value: TodoPriority) => void;
+  onEstimatedTimeChange: (value: string) => void;
+  onNotesChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
@@ -19,10 +23,14 @@ export function TodoComposer({
   dueDate,
   category,
   priority,
+  estimatedTime,
+  notes,
   onTitleChange,
   onDueDateChange,
   onCategoryChange,
   onPriorityChange,
+  onEstimatedTimeChange,
+  onNotesChange,
   onSubmit,
 }: TodoComposerProps) {
   return (
@@ -84,6 +92,36 @@ export function TodoComposer({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="form-field">
+        <label className="sr-only" htmlFor="todo-estimate">
+          Estimated time
+        </label>
+        <select
+          id="todo-estimate"
+          value={estimatedTime}
+          onChange={(event) => onEstimatedTimeChange(event.target.value)}
+        >
+          {estimatedTimes.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-field form-field-full">
+        <label className="sr-only" htmlFor="todo-notes">
+          Notes
+        </label>
+        <textarea
+          id="todo-notes"
+          placeholder="Add a note or context for this task"
+          value={notes}
+          onChange={(event) => onNotesChange(event.target.value)}
+          rows={3}
+        />
       </div>
 
       <button type="submit">Add Task</button>

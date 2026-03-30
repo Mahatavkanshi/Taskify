@@ -14,6 +14,19 @@
   --radius-md: 16px;
 }
 
+:root[data-theme="dusk"] {
+  --background: #11221f;
+  --surface: rgba(18, 34, 31, 0.82);
+  --surface-strong: #18302b;
+  --surface-soft: #1f3b35;
+  --text: #ecfff9;
+  --muted: #a9c7bf;
+  --border: rgba(154, 220, 203, 0.14);
+  --accent: #69d0c3;
+  --accent-strong: #9be5da;
+  --shadow: 0 30px 80px rgba(2, 8, 7, 0.35);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -33,9 +46,17 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+:root[data-theme="dusk"] body {
+  background:
+    radial-gradient(circle at top left, rgba(68, 129, 117, 0.36), transparent 25%),
+    radial-gradient(circle at right 20%, rgba(63, 140, 168, 0.22), transparent 24%),
+    linear-gradient(135deg, #122420 0%, #0d1816 100%);
+}
+
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -146,6 +167,22 @@ button {
   flex-wrap: wrap;
 }
 
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.theme-toggle {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+}
+
 .today-pill,
 .selected-pill {
   display: inline-flex;
@@ -157,6 +194,24 @@ button {
   color: var(--accent-strong);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+:root[data-theme="dusk"] .theme-toggle,
+:root[data-theme="dusk"] .today-pill,
+:root[data-theme="dusk"] .selected-pill,
+:root[data-theme="dusk"] .category-count,
+:root[data-theme="dusk"] .category-item,
+:root[data-theme="dusk"] .todo-form input,
+:root[data-theme="dusk"] .todo-form select,
+:root[data-theme="dusk"] .edit-fields input,
+:root[data-theme="dusk"] .edit-fields select,
+:root[data-theme="dusk"] .search-field input,
+:root[data-theme="dusk"] .highlight-item,
+:root[data-theme="dusk"] .toast,
+:root[data-theme="dusk"] .subtask-form input,
+:root[data-theme="dusk"] .subtask-delete {
+  background: rgba(21, 41, 37, 0.94);
+  color: var(--text);
 }
 
 .sidebar-intro {
@@ -342,7 +397,7 @@ h1 {
 
 .todo-form {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(160px, 0.7fr) minmax(170px, 0.8fr) minmax(160px, 0.8fr) auto;
+  grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(150px, 0.75fr));
   gap: 12px;
   margin-top: 22px;
 }
@@ -355,10 +410,16 @@ h1 {
   min-width: 0;
 }
 
+.form-field-full {
+  grid-column: 1 / -2;
+}
+
 .todo-form input,
 .todo-form select,
+.todo-form textarea,
 .edit-fields input,
-.edit-fields select {
+.edit-fields select,
+.edit-fields textarea {
   width: 100%;
   padding: 15px 16px;
   border: 1px solid var(--border);
@@ -371,11 +432,20 @@ h1 {
 
 .todo-form input:focus,
 .todo-form select:focus,
+.todo-form textarea:focus,
 .edit-fields input:focus,
-.edit-fields select:focus {
+.edit-fields select:focus,
+.edit-fields textarea:focus,
+.subtask-form input:focus {
   border-color: rgba(29, 110, 105, 0.28);
   box-shadow: 0 0 0 4px rgba(74, 183, 174, 0.12);
   transform: translateY(-1px);
+}
+
+.todo-form textarea,
+.edit-fields textarea {
+  resize: vertical;
+  min-height: 92px;
 }
 
 .todo-form button,
@@ -392,6 +462,7 @@ h1 {
 }
 
 .todo-form button {
+  grid-column: -2 / -1;
   padding: 15px 22px;
   background: linear-gradient(135deg, #247c78 0%, #4fbfb2 100%);
   color: #f5fffd;
@@ -435,7 +506,8 @@ h1 {
 }
 
 .filter-group button,
-.secondary-button {
+.secondary-button,
+.filter-star {
   padding: 10px 16px;
   background: rgba(255, 255, 255, 0.9);
   color: var(--text);
@@ -446,6 +518,12 @@ h1 {
   background: linear-gradient(135deg, #1f6c66 0%, #2e958d 100%);
   color: #f3fffd;
   box-shadow: 0 12px 24px rgba(29, 110, 105, 0.18);
+}
+
+.filter-star.is-active {
+  background: linear-gradient(135deg, #f3c95f 0%, #f5a623 100%);
+  color: #382300;
+  box-shadow: 0 12px 24px rgba(245, 166, 35, 0.18);
 }
 
 .secondary-button:disabled {
@@ -581,6 +659,86 @@ h1 {
   min-width: 0;
 }
 
+.subtask-block {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(27, 87, 74, 0.08);
+  border-radius: 16px;
+  background: rgba(247, 251, 239, 0.88);
+}
+
+.subtask-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.subtask-list {
+  display: grid;
+  gap: 8px;
+}
+
+.subtask-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.subtask-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtask-item input[type="checkbox"] {
+  inline-size: 15px;
+  block-size: 15px;
+  margin-top: 0;
+}
+
+.subtask-delete {
+  padding: 6px 10px;
+  border: 1px solid rgba(27, 87, 74, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+}
+
+.subtask-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.subtask-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  outline: none;
+}
+
+.subtask-form button {
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: rgba(43, 140, 134, 0.12);
+  color: var(--accent-strong);
+}
+
+.subtask-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .todo-item input[type="checkbox"] {
   inline-size: 18px;
   block-size: 18px;
@@ -596,11 +754,42 @@ h1 {
   flex-wrap: wrap;
 }
 
+.todo-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.star-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b4bdb9;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.star-button.is-starred {
+  color: #f5a623;
+}
+
 .todo-tag-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.estimate-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: rgba(218, 243, 231, 0.98);
+  color: #216857;
 }
 
 .category-pill {
@@ -627,6 +816,13 @@ h1 {
 .due-date {
   font-size: 0.92rem;
   color: var(--muted);
+}
+
+.todo-notes {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  white-space: pre-wrap;
 }
 
 .due-date-overdue {
@@ -702,6 +898,38 @@ h1 {
 
 .toast-info .toast-dot {
   background: #29619c;
+}
+
+:root[data-theme="dusk"] .subtask-block,
+:root[data-theme="dusk"] .highlight-card,
+:root[data-theme="dusk"] .progress-card,
+:root[data-theme="dusk"] .empty-state,
+:root[data-theme="dusk"] .sidebar-summary article,
+:root[data-theme="dusk"] .stats-row article,
+:root[data-theme="dusk"] .todo-item {
+  background: rgba(24, 48, 43, 0.96);
+}
+
+:root[data-theme="dusk"] .category-item.is-active,
+:root[data-theme="dusk"] .filter-group .is-active,
+:root[data-theme="dusk"] .todo-form button,
+:root[data-theme="dusk"] .subtask-form button,
+:root[data-theme="dusk"] .filter-star.is-active {
+  background: linear-gradient(135deg, #2b8c86 0%, #69d0c3 100%);
+  color: #08201c;
+}
+
+:root[data-theme="dusk"] .estimate-pill {
+  background: rgba(34, 84, 75, 0.96);
+  color: #abefe2;
+}
+
+:root[data-theme="dusk"] .star-button {
+  color: #7ea39b;
+}
+
+:root[data-theme="dusk"] .star-button.is-starred {
+  color: #ffd36e;
 }
 
 .tone-work .category-icon,
@@ -781,6 +1009,11 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .form-field-full,
+  .todo-form button {
+    grid-column: auto;
+  }
+
   .toolbar-group {
     width: 100%;
   }
@@ -812,6 +1045,10 @@ h1 {
   .todo-item button,
   .secondary-button {
     width: 100%;
+  }
+
+  .subtask-form {
+    grid-template-columns: 1fr;
   }
 
   .toast {

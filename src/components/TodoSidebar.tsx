@@ -6,8 +6,10 @@ type TodoSidebarProps = {
   progressValue: number;
   overdueCount: number;
   totalCount: number;
+  theme: "light" | "dusk";
   getCategoryCount: (categoryId: (typeof categories)[number]["id"]) => number;
   onSelectCategory: (category: CategoryView) => void;
+  onToggleTheme: () => void;
 };
 
 export function TodoSidebar({
@@ -16,14 +18,21 @@ export function TodoSidebar({
   progressValue,
   overdueCount,
   totalCount,
+  theme,
   getCategoryCount,
   onSelectCategory,
+  onToggleTheme,
 }: TodoSidebarProps) {
   return (
     <aside className="sidebar-card">
       <div className="sidebar-header">
         <p className="eyebrow">Taskify Lists</p>
-        <span className="today-pill">{todayLabel}</span>
+        <div className="sidebar-actions">
+          <button type="button" className="theme-toggle" onClick={onToggleTheme}>
+            {theme === "light" ? "Moon mode" : "Sun mode"}
+          </button>
+          <span className="today-pill">{todayLabel}</span>
+        </div>
       </div>
 
       <div className="sidebar-intro">

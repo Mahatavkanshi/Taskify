@@ -1,4 +1,4 @@
-import type { Todo, TodoCategory, TodoPriority } from "@/types/todo";
+import type { Todo, TodoCategory, TodoPriority, TodoSubtask } from "@/types/todo";
 
 export const categories = [
   { id: "work", label: "Work", emoji: "💼", tone: "tone-work" },
@@ -21,6 +21,8 @@ export const priorities = [
   label: string;
   tone: string;
 }>;
+
+export const estimatedTimes = ["10 min", "30 min", "1 hour", "2 hours"] as const;
 
 export type CategoryView = "all" | TodoCategory;
 
@@ -45,6 +47,23 @@ export function normalizeTodo(todo: Partial<Todo>): Todo {
     dueDate: todo.dueDate ?? "",
     category: normalizeCategory(todo.category),
     priority: normalizePriority(todo.priority),
+    starred: Boolean(todo.starred),
+    estimatedTime:
+      typeof todo.estimatedTime === "string" && todo.estimatedTime.length > 0
+        ? todo.estimatedTime
+        : "30 min",
+    notes: typeof todo.notes === "string" ? todo.notes : "",
+    subtasks: Array.isArray(todo.subtasks)
+      ? todo.subtasks.map((subtask) => normalizeSubtask(subtask))
+      : [],
+  };
+}
+
+export function normalizeSubtask(subtask: Partial<TodoSubtask>): TodoSubtask {
+  return {
+    id: subtask.id ?? crypto.randomUUID(),
+    title: subtask.title ?? "",
+    completed: Boolean(subtask.completed),
   };
 }
 
@@ -53,6 +72,8 @@ export function createTodo(
   dueDate: string,
   category: TodoCategory,
   priority: TodoPriority,
+  estimatedTime: string,
+  notes: string,
 ): Todo {
   return {
     id: crypto.randomUUID(),
@@ -62,6 +83,10 @@ export function createTodo(
     dueDate,
     category,
     priority,
+    starred: false,
+    estimatedTime,
+    notes,
+    subtasks: [],
   };
 }
 
