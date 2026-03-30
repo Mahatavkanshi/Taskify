@@ -320,7 +320,7 @@ button {
 
 .sidebar-summary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 22px;
 }
@@ -397,7 +397,7 @@ h1 {
 
 .todo-form {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(150px, 0.75fr));
+  grid-template-columns: minmax(0, 1.4fr) repeat(5, minmax(135px, 0.7fr));
   gap: 12px;
   margin-top: 22px;
 }
@@ -792,6 +792,16 @@ h1 {
   color: #216857;
 }
 
+.energy-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .category-pill {
   display: inline-flex;
   align-items: center;
@@ -924,6 +934,21 @@ h1 {
   color: #abefe2;
 }
 
+:root[data-theme="dusk"] .energy-pill.energy-quick {
+  background: rgba(50, 74, 36, 0.96);
+  color: #d8f4b6;
+}
+
+:root[data-theme="dusk"] .energy-pill.energy-deep {
+  background: rgba(41, 49, 88, 0.96);
+  color: #d9dfff;
+}
+
+:root[data-theme="dusk"] .energy-pill.energy-errand {
+  background: rgba(87, 63, 26, 0.96);
+  color: #ffe2b8;
+}
+
 :root[data-theme="dusk"] .star-button {
   color: #7ea39b;
 }
@@ -969,6 +994,87 @@ h1 {
 .priority-high {
   background: rgba(255, 227, 224, 0.98);
   color: #b13f2e;
+}
+
+.energy-quick {
+  background: rgba(226, 249, 229, 0.98);
+  color: #2e8852;
+}
+
+.energy-deep {
+  background: rgba(230, 233, 255, 0.98);
+  color: #4d58b8;
+}
+
+.energy-errand {
+  background: rgba(255, 237, 214, 0.98);
+  color: #b56a1f;
+}
+
+.focus-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 25, 21, 0.42);
+  backdrop-filter: blur(10px);
+  z-index: 30;
+}
+
+.focus-card {
+  width: min(680px, 100%);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+}
+
+.focus-head,
+.focus-title-row,
+.focus-tags,
+.focus-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.focus-head,
+.focus-actions {
+  justify-content: space-between;
+}
+
+.focus-body {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.focus-title-row h3,
+.focus-due,
+.focus-notes {
+  margin: 0;
+}
+
+.focus-due,
+.focus-notes {
+  color: var(--muted);
+}
+
+.focus-notes {
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.focus-subtasks {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-soft);
 }
 
 @keyframes rise-in {
@@ -1034,6 +1140,10 @@ h1 {
   .highlight-grid,
   .edit-grid,
   .sidebar-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-grid-wide {
     grid-template-columns: 1fr;
   }
 
