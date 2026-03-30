@@ -2,6 +2,8 @@ export type TodoFilter = "all" | "active" | "completed";
 
 export type TodoCategory = "work" | "personal" | "study" | "groceries";
 
+export type TodoPriority = "low" | "medium" | "high";
+
 export type Todo = {
   id: string;
   title: string;
@@ -9,4 +11,5 @@ export type Todo = {
   createdAt: number;
   dueDate: string;
   category: TodoCategory;
+  priority: TodoPriority;
 };
