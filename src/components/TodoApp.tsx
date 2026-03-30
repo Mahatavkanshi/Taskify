@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, KeyboardEvent, startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { TodoAnalytics } from "@/components/TodoAnalytics";
+import { TodoCalendar } from "@/components/TodoCalendar";
 import { TodoComposer } from "@/components/TodoComposer";
 import { TodoHighlights } from "@/components/TodoHighlights";
 import { TodoList } from "@/components/TodoList";
@@ -63,7 +65,9 @@ export function TodoApp() {
   const [theme, setTheme] = useState<AppTheme>("light");
   const [completedDays, setCompletedDays] = useState<string[]>([]);
   const [focusTodoId, setFocusTodoId] = useState<string | null>(null);
+  const [draggingTodoId, setDraggingTodoId] = useState<string | null>(null);
   const hasHydrated = useRef(false);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const savedTodos = window.localStorage.getItem(STORAGE_KEY);
@@ -241,6 +245,10 @@ export function TodoApp() {
         return firstPriority - secondPriority;
       }
 
+      if (firstTodo.order !== secondTodo.order) {
+        return secondTodo.order - firstTodo.order;
+      }
+
       return secondTodo.createdAt - firstTodo.createdAt;
     });
   }, [activeCategory, filter, searchTerm, starredOnly, todos]);
@@ -264,6 +272,32 @@ export function TodoApp() {
 
   function getCategoryCount(categoryId: TodoCategory): number {
     return todos.filter((todo) => todo.category === categoryId).length;
+  }
+
+  function moveTodo(draggedId: string, targetId: string) {
+    if (draggedId === targetId) {
+      return;
+    }
+
+    const orderedIds = filteredTodos.map((todo) => todo.id);
+    const draggedIndex = orderedIds.indexOf(draggedId);
+    const targetIndex = orderedIds.indexOf(targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      return;
+    }
+
+    const nextIds = [...orderedIds];
+    const [draggedItem] = nextIds.splice(draggedIndex, 1);
+    nextIds.splice(targetIndex, 0, draggedItem);
+
+    const orderMap = new Map(nextIds.map((id, index) => [id, nextIds.length - index]));
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        orderMap.has(todo.id) ? { ...todo, order: orderMap.get(todo.id) ?? todo.order } : todo,
+      ),
+    );
   }
 
   function showToast(message: string, tone: ToastState["tone"] = "success") {
@@ -501,6 +535,65 @@ export function TodoApp() {
     }
   }
 
+  function handleDragStart(id: string) {
+    setDraggingTodoId(id);
+  }
+
+  function handleDragOver(event: DragEvent<HTMLElement>) {
+    event.preventDefault();
+  }
+
+  function handleDrop(targetId: string) {
+    if (!draggingTodoId) {
+      return;
+    }
+
+    moveTodo(draggingTodoId, targetId);
+    setDraggingTodoId(null);
+  }
+
+  function exportTodos() {
+    const payload = JSON.stringify(todos, null, 2);
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `taskify-export-${getTodayKey()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast("Exported todos as JSON");
+  }
+
+  function triggerImport() {
+    importInputRef.current?.click();
+  }
+
+  async function importTodos(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const parsedTodos = JSON.parse(text) as Partial<Todo>[];
+
+      if (!Array.isArray(parsedTodos)) {
+        throw new Error("Invalid file format");
+      }
+
+      const normalizedTodos = parsedTodos.map(normalizeTodo);
+      setTodos(normalizedTodos);
+      setFocusTodoId(null);
+      showToast(`Imported ${normalizedTodos.length} task${normalizedTodos.length === 1 ? "" : "s"}`);
+    } catch {
+      showToast("Import failed. Use a valid Taskify JSON export.", "info");
+    } finally {
+      event.target.value = "";
+    }
+  }
+
   return (
     <main className="page-shell">
       <section className="app-shell">
@@ -588,6 +681,11 @@ export function TodoApp() {
               </article>
             </div>
 
+            <div className="insight-grid">
+              <TodoCalendar todos={filteredTodos} onOpenFocus={setFocusTodoId} />
+              <TodoAnalytics todos={filteredTodos} completedDays={completedDays} />
+            </div>
+
             <TodoHighlights todos={filteredTodos} />
 
             <div className="toolbar">
@@ -625,6 +723,22 @@ export function TodoApp() {
                     onChange={(event) => setSearchTerm(event.target.value)}
                   />
                 </div>
+
+                <div className="io-group">
+                  <button type="button" className="secondary-button" onClick={exportTodos}>
+                    Export JSON
+                  </button>
+                  <button type="button" className="secondary-button" onClick={triggerImport}>
+                    Import JSON
+                  </button>
+                  <input
+                    ref={importInputRef}
+                    type="file"
+                    accept="application/json"
+                    className="sr-only"
+                    onChange={importTodos}
+                  />
+                </div>
               </div>
 
               <button
@@ -653,6 +767,9 @@ export function TodoApp() {
               onToggleStar={toggleStar}
               onDuplicateTodo={duplicateTodo}
               onOpenFocus={setFocusTodoId}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
               onToggleSubtask={toggleSubtask}
               onStartEditing={startEditing}
               onCancelEditing={cancelEditing}

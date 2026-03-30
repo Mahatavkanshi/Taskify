@@ -10,7 +10,7 @@ import {
   priorities,
 } from "@/lib/todo-config";
 import type { Todo, TodoCategory, TodoEnergy, TodoPriority } from "@/types/todo";
-import type { KeyboardEvent } from "react";
+import type { DragEvent, KeyboardEvent } from "react";
 
 type TodoListProps = {
   todos: Todo[];
@@ -33,6 +33,9 @@ type TodoListProps = {
   onDeleteTodo: (id: string) => void;
   onDuplicateTodo: (id: string) => void;
   onOpenFocus: (id: string) => void;
+  onDragStart: (id: string) => void;
+  onDragOver: (event: DragEvent<HTMLElement>) => void;
+  onDrop: (id: string) => void;
   onToggleSubtask: (todoId: string, subtaskId: string) => void;
   onDeleteSubtask: (todoId: string, subtaskId: string) => void;
   onSubtaskDraftChange: (todoId: string, value: string) => void;
@@ -68,6 +71,9 @@ export function TodoList({
   onDeleteTodo,
   onDuplicateTodo,
   onOpenFocus,
+  onDragStart,
+  onDragOver,
+  onDrop,
   onToggleSubtask,
   onDeleteSubtask,
   onSubtaskDraftChange,
@@ -106,6 +112,10 @@ export function TodoList({
                 isOverdue(todo) ? " is-overdue" : ""
               }${isRemoving ? " is-removing" : ""}`}
               style={{ animationDelay: `${index * 70}ms` }}
+              draggable={editingId !== todo.id}
+              onDragStart={() => onDragStart(todo.id)}
+              onDragOver={onDragOver}
+              onDrop={() => onDrop(todo.id)}
             >
               <div className="todo-main">
                 <label>

@@ -60,6 +60,7 @@ export function normalizeTodo(todo: Partial<Todo>): Todo {
     title: todo.title ?? "",
     completed: Boolean(todo.completed),
     createdAt: todo.createdAt ?? Date.now(),
+    order: typeof todo.order === "number" ? todo.order : todo.createdAt ?? Date.now(),
     dueDate: todo.dueDate ?? "",
     category: normalizeCategory(todo.category),
     priority: normalizePriority(todo.priority),
@@ -98,6 +99,7 @@ export function createTodo(
     title,
     completed: false,
     createdAt: Date.now(),
+    order: Date.now(),
     dueDate,
     category,
     priority,
@@ -277,4 +279,59 @@ export function getTodayLabel(): string {
   ];
 
   return `${weekdays[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
+}
+
+export function formatDayNumber(dateKey: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return dateKey;
+  }
+
+  return `${day}`;
+}
+
+export function formatWeekdayShort(dateKey: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return "Day";
+  }
+
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return weekdays[new Date(year, month - 1, day).getDay()];
+}
+
+export function getDateKeyFromOffset(offset: number): string {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offset);
+
+  return date.toISOString().slice(0, 10);
+}
+
+export function formatReadableDate(dateKey: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return dateKey;
+  }
+
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  return `${day} ${months[month - 1]}`;
 }

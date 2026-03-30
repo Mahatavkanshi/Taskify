@@ -17,6 +17,7 @@ export type Todo = {
   title: string;
   completed: boolean;
   createdAt: number;
+  order: number;
   dueDate: string;
   category: TodoCategory;
   priority: TodoPriority;
