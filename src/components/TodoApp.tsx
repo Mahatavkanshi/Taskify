@@ -675,6 +675,79 @@ export function TodoApp() {
         </div>
       </section>
 
+      {focusTodo ? (
+        <div className="focus-overlay" role="dialog" aria-modal="true">
+          <div className="focus-card">
+            <div className="focus-head">
+              <p className="panel-kicker">Focus mode</p>
+              <button type="button" className="secondary-button" onClick={() => setFocusTodoId(null)}>
+                Close
+              </button>
+            </div>
+
+            <div className="focus-body">
+              <div className="focus-title-row">
+                <button
+                  type="button"
+                  className={`star-button${focusTodo.starred ? " is-starred" : ""}`}
+                  onClick={() => toggleStar(focusTodo.id)}
+                >
+                  {focusTodo.starred ? "★" : "☆"}
+                </button>
+                <h3>{focusTodo.title}</h3>
+              </div>
+
+              <div className="focus-tags">
+                <span className={`category-pill ${getCategoryMeta(focusTodo.category).tone}`}>
+                  {getCategoryMeta(focusTodo.category).emoji} {getCategoryMeta(focusTodo.category).label}
+                </span>
+                <span className="estimate-pill">{focusTodo.estimatedTime}</span>
+                <span className={`priority-pill ${focusTodo.priority === "low" ? "priority-low" : focusTodo.priority === "medium" ? "priority-medium" : "priority-high"}`}>
+                  {focusTodo.priority}
+                </span>
+                <span className={`energy-pill ${getEnergyMeta(focusTodo.energy).tone}`}>
+                  {getEnergyMeta(focusTodo.energy).label}
+                </span>
+              </div>
+
+              <p className="focus-due">{focusTodo.dueDate ? `Due ${focusTodo.dueDate}` : "No due date set"}</p>
+              {focusTodo.notes ? <p className="focus-notes">{focusTodo.notes}</p> : null}
+
+              <div className="focus-actions">
+                <button type="button" onClick={() => toggleTodo(focusTodo.id)}>
+                  {focusTodo.completed ? "Mark active" : "Mark complete"}
+                </button>
+                <button type="button" className="secondary-button" onClick={() => startEditing(focusTodo)}>
+                  Edit task
+                </button>
+              </div>
+
+              <div className="focus-subtasks">
+                <p className="panel-kicker">Subtasks</p>
+                {focusTodo.subtasks.length === 0 ? (
+                  <p className="subtask-empty">No subtasks yet.</p>
+                ) : (
+                  <div className="subtask-list">
+                    {focusTodo.subtasks.map((subtask) => (
+                      <div key={subtask.id} className="subtask-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={subtask.completed}
+                            onChange={() => toggleSubtask(focusTodo.id, subtask.id)}
+                          />
+                          <span className={subtask.completed ? "completed" : ""}>{subtask.title}</span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {toast ? <TodoToast message={toast.message} tone={toast.tone} /> : null}
     </main>
   );
