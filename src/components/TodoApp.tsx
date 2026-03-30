@@ -279,22 +279,32 @@ export function TodoApp() {
       return;
     }
 
-    setTodos((currentTodos) => [createTodo(trimmedTitle, dueDate, category, priority, estimatedTime, notes.trim()), ...currentTodos]);
+    setTodos((currentTodos) => [createTodo(trimmedTitle, dueDate, category, priority, energy, estimatedTime, notes.trim()), ...currentTodos]);
     setTitle("");
     setDueDate("");
     setCategory("personal");
     setPriority("medium");
+    setEnergy("quick-win");
     setEstimatedTime("30 min");
     setNotes("");
     showToast(`Added "${trimmedTitle}"`);
   }
 
   function toggleTodo(id: string) {
+    const targetTodo = todos.find((todo) => todo.id === id);
+
     setTodos((currentTodos) =>
       currentTodos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
       ),
     );
+
+    if (targetTodo && !targetTodo.completed) {
+      const todayKey = getTodayKey();
+      setCompletedDays((currentDays) =>
+        currentDays.includes(todayKey) ? currentDays : [todayKey, ...currentDays],
+      );
+    }
   }
 
   function toggleStar(id: string) {
@@ -379,8 +389,38 @@ export function TodoApp() {
     }, removeDelay);
 
     if (removedTodo) {
+      if (focusTodoId === id) {
+        setFocusTodoId(null);
+      }
       showToast(`Removed "${removedTodo.title}"`, "info");
     }
+  }
+
+  function duplicateTodo(id: string) {
+    const sourceTodo = todos.find((todo) => todo.id === id);
+
+    if (!sourceTodo) {
+      return;
+    }
+
+    setTodos((currentTodos) => [
+      {
+        ...sourceTodo,
+        id: crypto.randomUUID(),
+        title: `${sourceTodo.title} copy`,
+        completed: false,
+        starred: false,
+        createdAt: Date.now(),
+        subtasks: sourceTodo.subtasks.map((subtask) => ({
+          ...subtask,
+          id: crypto.randomUUID(),
+          completed: false,
+        })),
+      },
+      ...currentTodos,
+    ]);
+
+    showToast(`Duplicated "${sourceTodo.title}"`);
   }
 
   function clearCompleted() {
@@ -406,6 +446,7 @@ export function TodoApp() {
     setEditingDueDate(todo.dueDate);
     setEditingCategory(todo.category);
     setEditingPriority(todo.priority);
+    setEditingEnergy(todo.energy);
     setEditingEstimatedTime(todo.estimatedTime);
     setEditingNotes(todo.notes);
   }
@@ -416,6 +457,7 @@ export function TodoApp() {
     setEditingDueDate("");
     setEditingCategory("personal");
     setEditingPriority("medium");
+    setEditingEnergy("quick-win");
     setEditingEstimatedTime("30 min");
     setEditingNotes("");
   }
@@ -436,6 +478,7 @@ export function TodoApp() {
               dueDate: editingDueDate,
               category: editingCategory,
               priority: editingPriority,
+              energy: editingEnergy,
               estimatedTime: editingEstimatedTime,
               notes: editingNotes.trim(),
             }
