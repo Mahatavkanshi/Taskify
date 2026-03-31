@@ -609,6 +609,11 @@ h1 {
   transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
+.calendar-trigger-icon {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
 .calendar-trigger:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(29, 110, 105, 0.14);
@@ -646,6 +651,20 @@ h1 {
 
 .calendar-grid-month {
   align-items: stretch;
+}
+
+.calendar-grid-animated {
+  animation-duration: 220ms;
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+}
+
+.calendar-grid-forward {
+  animation-name: calendar-slide-forward;
+}
+
+.calendar-grid-backward {
+  animation-name: calendar-slide-backward;
 }
 
 .calendar-day {
@@ -1405,6 +1424,30 @@ h1 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes calendar-slide-forward {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes calendar-slide-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
