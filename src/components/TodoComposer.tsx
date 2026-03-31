@@ -1,5 +1,12 @@
-import { categories, energyModes, estimatedTimes, priorities } from "@/lib/todo-config";
-import type { TodoCategory, TodoEnergy, TodoPriority } from "@/types/todo";
+import {
+  categories,
+  energyModes,
+  estimatedTimes,
+  priorities,
+  recurrenceModes,
+  reminderOptions,
+} from "@/lib/todo-config";
+import type { TodoCategory, TodoEnergy, TodoPriority, TodoRecurrence } from "@/types/todo";
 import type { FormEvent } from "react";
 
 type TodoComposerProps = {
@@ -8,6 +15,8 @@ type TodoComposerProps = {
   category: TodoCategory;
   priority: TodoPriority;
   energy: TodoEnergy;
+  recurrence: TodoRecurrence;
+  reminderMinutes: number;
   estimatedTime: string;
   notes: string;
   onTitleChange: (value: string) => void;
@@ -15,6 +24,8 @@ type TodoComposerProps = {
   onCategoryChange: (value: TodoCategory) => void;
   onPriorityChange: (value: TodoPriority) => void;
   onEnergyChange: (value: TodoEnergy) => void;
+  onRecurrenceChange: (value: TodoRecurrence) => void;
+  onReminderMinutesChange: (value: number) => void;
   onEstimatedTimeChange: (value: string) => void;
   onNotesChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -26,6 +37,8 @@ export function TodoComposer({
   category,
   priority,
   energy,
+  recurrence,
+  reminderMinutes,
   estimatedTime,
   notes,
   onTitleChange,
@@ -33,6 +46,8 @@ export function TodoComposer({
   onCategoryChange,
   onPriorityChange,
   onEnergyChange,
+  onRecurrenceChange,
+  onReminderMinutesChange,
   onEstimatedTimeChange,
   onNotesChange,
   onSubmit,
@@ -127,6 +142,40 @@ export function TodoComposer({
           {energyModes.map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-field">
+        <label className="sr-only" htmlFor="todo-recurrence">
+          Recurrence
+        </label>
+        <select
+          id="todo-recurrence"
+          value={recurrence}
+          onChange={(event) => onRecurrenceChange(event.target.value as TodoRecurrence)}
+        >
+          {recurrenceModes.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-field">
+        <label className="sr-only" htmlFor="todo-reminder">
+          Reminder
+        </label>
+        <select
+          id="todo-reminder"
+          value={reminderMinutes}
+          onChange={(event) => onReminderMinutesChange(Number(event.target.value))}
+        >
+          {reminderOptions.map((item) => (
+            <option key={item} value={item}>
+              {item === 0 ? "No reminder" : `${item} min before`}
             </option>
           ))}
         </select>

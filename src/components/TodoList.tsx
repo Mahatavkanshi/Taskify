@@ -5,11 +5,14 @@ import {
   getDueDateLabel,
   getEnergyMeta,
   getPriorityMeta,
+  getRecurrenceLabel,
   isOverdue,
   energyModes,
   priorities,
+  recurrenceModes,
+  reminderOptions,
 } from "@/lib/todo-config";
-import type { Todo, TodoCategory, TodoEnergy, TodoPriority } from "@/types/todo";
+import type { Todo, TodoCategory, TodoEnergy, TodoPriority, TodoRecurrence } from "@/types/todo";
 import type { DragEvent, KeyboardEvent } from "react";
 
 type TodoListProps = {
@@ -20,13 +23,17 @@ type TodoListProps = {
   editingCategory: TodoCategory;
   editingPriority: TodoPriority;
   editingEnergy: TodoEnergy;
+  editingRecurrence: TodoRecurrence;
+  editingReminderMinutes: number;
   editingEstimatedTime: string;
   editingNotes: string;
   removingIds: string[];
   subtaskDrafts: Record<string, string>;
   starredOnly: boolean;
+  selectedIds: string[];
   onToggleTodo: (id: string) => void;
   onToggleStar: (id: string) => void;
+  onToggleSelect: (id: string) => void;
   onStartEditing: (todo: Todo) => void;
   onCancelEditing: () => void;
   onSaveEdit: (id: string) => void;
@@ -45,6 +52,8 @@ type TodoListProps = {
   onEditingCategoryChange: (value: TodoCategory) => void;
   onEditingPriorityChange: (value: TodoPriority) => void;
   onEditingEnergyChange: (value: TodoEnergy) => void;
+  onEditingRecurrenceChange: (value: TodoRecurrence) => void;
+  onEditingReminderMinutesChange: (value: number) => void;
   onEditingEstimatedTimeChange: (value: string) => void;
   onEditingNotesChange: (value: string) => void;
   onEditKeyDown: (event: KeyboardEvent<HTMLInputElement>, id: string) => void;
@@ -58,13 +67,17 @@ export function TodoList({
   editingCategory,
   editingPriority,
   editingEnergy,
+  editingRecurrence,
+  editingReminderMinutes,
   editingEstimatedTime,
   editingNotes,
   removingIds,
   subtaskDrafts,
   starredOnly,
+  selectedIds,
   onToggleTodo,
   onToggleStar,
+  onToggleSelect,
   onStartEditing,
   onCancelEditing,
   onSaveEdit,
@@ -83,6 +96,8 @@ export function TodoList({
   onEditingCategoryChange,
   onEditingPriorityChange,
   onEditingEnergyChange,
+  onEditingRecurrenceChange,
+  onEditingReminderMinutesChange,
   onEditingEstimatedTimeChange,
   onEditingNotesChange,
   onEditKeyDown,
@@ -104,11 +119,12 @@ export function TodoList({
           const priorityMeta = getPriorityMeta(todo.priority);
           const energyMeta = getEnergyMeta(todo.energy);
           const isRemoving = removingIds.includes(todo.id);
+          const isSelected = selectedIds.includes(todo.id);
 
           return (
             <article
               key={todo.id}
-              className={`todo-item ${categoryMeta.tone}${
+              className={`todo-item ${categoryMeta.tone}${isSelected ? " is-selected" : ""}${
                 isOverdue(todo) ? " is-overdue" : ""
               }${isRemoving ? " is-removing" : ""}`}
               style={{ animationDelay: `${index * 70}ms` }}
@@ -119,6 +135,13 @@ export function TodoList({
             >
               <div className="todo-main">
                 <label>
+                  <input
+                    type="checkbox"
+                    className="select-checkbox"
+                    checked={isSelected}
+                    onChange={() => onToggleSelect(todo.id)}
+                    aria-label="Select task"
+                  />
                   <input
                     type="checkbox"
                     checked={todo.completed}
@@ -183,6 +206,28 @@ export function TodoList({
                             </option>
                           ))}
                         </select>
+                        <select
+                          value={editingRecurrence}
+                          onChange={(event) =>
+                            onEditingRecurrenceChange(event.target.value as TodoRecurrence)
+                          }
+                        >
+                          {recurrenceModes.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={editingReminderMinutes}
+                          onChange={(event) => onEditingReminderMinutesChange(Number(event.target.value))}
+                        >
+                          {reminderOptions.map((item) => (
+                            <option key={item} value={item}>
+                              {item === 0 ? "No reminder" : `${item} min before`}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <textarea
                         rows={3}
@@ -208,6 +253,12 @@ export function TodoList({
                         <div className="todo-tag-row">
                           <span className="estimate-pill">{todo.estimatedTime}</span>
                           <span className={`energy-pill ${energyMeta.tone}`}>{energyMeta.label}</span>
+                          {todo.recurrence !== "none" ? (
+                            <span className="recurrence-pill">{getRecurrenceLabel(todo.recurrence)}</span>
+                          ) : null}
+                          {todo.reminderMinutes > 0 ? (
+                            <span className="reminder-pill">{todo.reminderMinutes}m alert</span>
+                          ) : null}
                           <span className={`priority-pill ${priorityMeta.tone}`}>
                             {priorityMeta.label}
                           </span>

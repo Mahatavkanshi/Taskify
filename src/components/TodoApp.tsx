@@ -15,13 +15,22 @@ import {
   getDueDateTimestamp,
   getEnergyMeta,
   getProgressValue,
+  getRecurrenceLabel,
   getTodayKey,
   getTodayLabel,
   isOverdue,
   normalizeTodo,
+  shiftRecurringDate,
   type CategoryView,
 } from "@/lib/todo-config";
-import type { Todo, TodoCategory, TodoEnergy, TodoFilter, TodoPriority } from "@/types/todo";
+import type {
+  Todo,
+  TodoCategory,
+  TodoEnergy,
+  TodoFilter,
+  TodoPriority,
+  TodoRecurrence,
+} from "@/types/todo";
 
 const STORAGE_KEY = "taskify.todos";
 const UI_STATE_KEY = "taskify.ui-state";
@@ -37,6 +46,7 @@ type ToastState = {
 };
 
 type AppTheme = "light" | "dusk";
+type ReminderPermissionState = "default" | "denied" | "granted" | "unsupported";
 
 export function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -45,6 +55,8 @@ export function TodoApp() {
   const [category, setCategory] = useState<TodoCategory>("personal");
   const [priority, setPriority] = useState<TodoPriority>("medium");
   const [energy, setEnergy] = useState<TodoEnergy>("quick-win");
+  const [recurrence, setRecurrence] = useState<TodoRecurrence>("none");
+  const [reminderMinutes, setReminderMinutes] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState("30 min");
   const [notes, setNotes] = useState("");
   const [filter, setFilter] = useState<TodoFilter>("all");
@@ -57,6 +69,8 @@ export function TodoApp() {
   const [editingCategory, setEditingCategory] = useState<TodoCategory>("personal");
   const [editingPriority, setEditingPriority] = useState<TodoPriority>("medium");
   const [editingEnergy, setEditingEnergy] = useState<TodoEnergy>("quick-win");
+  const [editingRecurrence, setEditingRecurrence] = useState<TodoRecurrence>("none");
+  const [editingReminderMinutes, setEditingReminderMinutes] = useState(0);
   const [editingEstimatedTime, setEditingEstimatedTime] = useState("30 min");
   const [editingNotes, setEditingNotes] = useState("");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
@@ -67,8 +81,13 @@ export function TodoApp() {
   const [focusTodoId, setFocusTodoId] = useState<string | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [draggingTodoId, setDraggingTodoId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [notificationPermission, setNotificationPermission] =
+    useState<ReminderPermissionState>("default");
   const hasHydrated = useRef(false);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const reminderTimeoutsRef = useRef<Record<string, number>>({});
+  const notifiedIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const savedTodos = window.localStorage.getItem(STORAGE_KEY);
