@@ -861,6 +861,8 @@ export function TodoApp() {
               category={category}
               priority={priority}
               energy={energy}
+              recurrence={recurrence}
+              reminderMinutes={reminderMinutes}
               estimatedTime={estimatedTime}
               notes={notes}
               onTitleChange={setTitle}
@@ -868,6 +870,8 @@ export function TodoApp() {
               onCategoryChange={setCategory}
               onPriorityChange={setPriority}
               onEnergyChange={setEnergy}
+              onRecurrenceChange={setRecurrence}
+              onReminderMinutesChange={setReminderMinutes}
               onEstimatedTimeChange={setEstimatedTime}
               onNotesChange={setNotes}
               onSubmit={handleSubmit}
@@ -931,6 +935,9 @@ export function TodoApp() {
                 </div>
 
                 <div className="io-group">
+                  <button type="button" className="secondary-button" onClick={enableReminders}>
+                    {notificationPermission === "granted" ? "Reminders on" : "Enable reminders"}
+                  </button>
                   <button type="button" className="secondary-button" onClick={exportTodos}>
                     Export JSON
                   </button>
@@ -947,14 +954,31 @@ export function TodoApp() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={clearCompleted}
-                disabled={completedCount === 0}
-              >
-                Clear completed
-              </button>
+              <div className="toolbar-group">
+                <button type="button" className="secondary-button" onClick={toggleSelectAllVisible}>
+                  {filteredTodos.length > 0 && filteredTodos.every((todo) => selectedIds.includes(todo.id))
+                    ? "Clear selection"
+                    : "Select visible"}
+                </button>
+                {selectedIds.length > 0 ? (
+                  <>
+                    <button type="button" className="secondary-button" onClick={completeSelected}>
+                      Complete selected
+                    </button>
+                    <button type="button" className="secondary-button" onClick={deleteSelected}>
+                      Delete selected
+                    </button>
+                  </>
+                ) : null}
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={clearCompleted}
+                  disabled={completedCount === 0}
+                >
+                  Clear completed
+                </button>
+              </div>
             </div>
 
             <TodoList
@@ -965,12 +989,16 @@ export function TodoApp() {
               editingCategory={editingCategory}
               editingPriority={editingPriority}
               editingEnergy={editingEnergy}
+              editingRecurrence={editingRecurrence}
+              editingReminderMinutes={editingReminderMinutes}
               editingEstimatedTime={editingEstimatedTime}
               editingNotes={editingNotes}
               removingIds={removingIds}
               starredOnly={starredOnly}
+              selectedIds={selectedIds}
               onToggleTodo={toggleTodo}
               onToggleStar={toggleStar}
+              onToggleSelect={toggleSelect}
               onDuplicateTodo={duplicateTodo}
               onOpenFocus={setFocusTodoId}
               onDragStart={handleDragStart}
@@ -989,6 +1017,8 @@ export function TodoApp() {
               onEditingCategoryChange={setEditingCategory}
               onEditingPriorityChange={setEditingPriority}
               onEditingEnergyChange={setEditingEnergy}
+              onEditingRecurrenceChange={setEditingRecurrence}
+              onEditingReminderMinutesChange={setEditingReminderMinutes}
               onEditingEstimatedTimeChange={setEditingEstimatedTime}
               onEditingNotesChange={setEditingNotes}
               onEditKeyDown={handleEditKeyDown}
