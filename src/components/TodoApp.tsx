@@ -1055,6 +1055,12 @@ export function TodoApp() {
                   {getCategoryMeta(focusTodo.category).emoji} {getCategoryMeta(focusTodo.category).label}
                 </span>
                 <span className="estimate-pill">{focusTodo.estimatedTime}</span>
+                {focusTodo.recurrence !== "none" ? (
+                  <span className="recurrence-pill">{getRecurrenceLabel(focusTodo.recurrence)}</span>
+                ) : null}
+                {focusTodo.reminderMinutes > 0 ? (
+                  <span className="reminder-pill">{focusTodo.reminderMinutes}m alert</span>
+                ) : null}
                 <span className={`priority-pill ${focusTodo.priority === "low" ? "priority-low" : focusTodo.priority === "medium" ? "priority-medium" : "priority-high"}`}>
                   {focusTodo.priority}
                 </span>

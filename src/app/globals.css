@@ -397,7 +397,7 @@ h1 {
 
 .todo-form {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) repeat(5, minmax(135px, 0.7fr));
+  grid-template-columns: minmax(0, 1.4fr) repeat(6, minmax(130px, 0.66fr));
   gap: 12px;
   margin-top: 22px;
 }
@@ -929,6 +929,11 @@ h1 {
   border-color: rgba(192, 91, 44, 0.25);
 }
 
+.todo-item.is-selected {
+  border-color: rgba(43, 140, 134, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(43, 140, 134, 0.12);
+}
+
 .todo-item.is-removing {
   opacity: 0;
   transform: translateX(24px) scale(0.98);
@@ -1047,6 +1052,10 @@ h1 {
   margin-top: 4px;
 }
 
+.select-checkbox {
+  accent-color: #f5a623;
+}
+
 .todo-heading-row {
   display: flex;
   align-items: center;
@@ -1101,6 +1110,23 @@ h1 {
   font-size: 0.82rem;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.92);
+}
+
+.recurrence-pill,
+.reminder-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: rgba(245, 243, 217, 0.98);
+  color: #7b661d;
+}
+
+.reminder-pill {
+  background: rgba(224, 237, 255, 0.98);
+  color: #355f9d;
 }
 
 .category-pill {
@@ -1233,6 +1259,16 @@ h1 {
 :root[data-theme="dusk"] .estimate-pill {
   background: rgba(34, 84, 75, 0.96);
   color: #abefe2;
+}
+
+:root[data-theme="dusk"] .recurrence-pill {
+  background: rgba(89, 77, 33, 0.96);
+  color: #ffe7a3;
+}
+
+:root[data-theme="dusk"] .reminder-pill {
+  background: rgba(35, 58, 92, 0.96);
+  color: #c8dbff;
 }
 
 :root[data-theme="dusk"] .energy-pill.energy-quick {
