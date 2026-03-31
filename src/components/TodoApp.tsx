@@ -583,6 +583,7 @@ export function TodoApp() {
       if (focusTodoId === id) {
         setFocusTodoId(null);
       }
+      setSelectedIds((currentIds) => currentIds.filter((item) => item !== id));
       showToast(`Removed "${removedTodo.title}"`, "info");
     }
   }
@@ -638,6 +639,8 @@ export function TodoApp() {
     setEditingCategory(todo.category);
     setEditingPriority(todo.priority);
     setEditingEnergy(todo.energy);
+    setEditingRecurrence(todo.recurrence);
+    setEditingReminderMinutes(todo.reminderMinutes);
     setEditingEstimatedTime(todo.estimatedTime);
     setEditingNotes(todo.notes);
   }
@@ -649,6 +652,8 @@ export function TodoApp() {
     setEditingCategory("personal");
     setEditingPriority("medium");
     setEditingEnergy("quick-win");
+    setEditingRecurrence("none");
+    setEditingReminderMinutes(0);
     setEditingEstimatedTime("30 min");
     setEditingNotes("");
   }
@@ -670,6 +675,8 @@ export function TodoApp() {
               category: editingCategory,
               priority: editingPriority,
               energy: editingEnergy,
+              recurrence: editingRecurrence,
+              reminderMinutes: editingReminderMinutes,
               estimatedTime: editingEstimatedTime,
               notes: editingNotes.trim(),
             }
@@ -735,6 +742,21 @@ export function TodoApp() {
     showToast("Exported todos as JSON");
   }
 
+  async function enableReminders() {
+    if (!("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      showToast("Notifications are not supported in this browser.", "info");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission as ReminderPermissionState);
+    showToast(
+      permission === "granted" ? "Browser reminders enabled" : "Reminder permission was not granted",
+      permission === "granted" ? "success" : "info",
+    );
+  }
+
   function triggerImport() {
     importInputRef.current?.click();
   }
@@ -757,6 +779,7 @@ export function TodoApp() {
       const normalizedTodos = parsedTodos.map(normalizeTodo);
       setTodos(normalizedTodos);
       setFocusTodoId(null);
+      setSelectedIds([]);
       showToast(`Imported ${normalizedTodos.length} task${normalizedTodos.length === 1 ? "" : "s"}`);
     } catch {
       showToast("Import failed. Use a valid Taskify JSON export.", "info");
