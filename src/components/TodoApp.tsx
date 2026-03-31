@@ -673,7 +673,12 @@ export function TodoApp() {
                 aria-label="Open calendar"
                 onClick={() => setIsCalendarOpen(true)}
               >
-                <span aria-hidden="true">🗓</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="calendar-trigger-icon">
+                  <path
+                    d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8ZM8 12a1 1 0 0 1 .117 1.993L8 14H7a1 1 0 0 1-.117-1.993L7 12h1Zm5 0a1 1 0 0 1 .117 1.993L13 14h-1a1 1 0 0 1-.117-1.993L12 12h1Zm5 0a1 1 0 0 1 .117 1.993L18 14h-1a1 1 0 0 1-.117-1.993L17 12h1ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
+                    fill="currentColor"
+                  />
+                </svg>
               </button>
             </div>
 

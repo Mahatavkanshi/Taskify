@@ -11,6 +11,7 @@ const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function TodoCalendar({ todos, onOpenFocus }: TodoCalendarProps) {
   const [monthOffset, setMonthOffset] = useState(0);
+  const [navDirection, setNavDirection] = useState<"forward" | "backward">("forward");
 
   const { days, monthLabel } = useMemo(() => {
     const now = new Date();
@@ -66,13 +67,31 @@ export function TodoCalendar({ todos, onOpenFocus }: TodoCalendarProps) {
           <h3>{monthLabel}</h3>
         </div>
         <div className="calendar-nav">
-          <button type="button" onClick={() => setMonthOffset((current) => current - 1)}>
+          <button
+            type="button"
+            onClick={() => {
+              setNavDirection("backward");
+              setMonthOffset((current) => current - 1);
+            }}
+          >
             Prev
           </button>
-          <button type="button" onClick={() => setMonthOffset(0)}>
+          <button
+            type="button"
+            onClick={() => {
+              setNavDirection(monthOffset > 0 ? "backward" : "forward");
+              setMonthOffset(0);
+            }}
+          >
             Today
           </button>
-          <button type="button" onClick={() => setMonthOffset((current) => current + 1)}>
+          <button
+            type="button"
+            onClick={() => {
+              setNavDirection("forward");
+              setMonthOffset((current) => current + 1);
+            }}
+          >
             Next
           </button>
         </div>
@@ -84,7 +103,10 @@ export function TodoCalendar({ todos, onOpenFocus }: TodoCalendarProps) {
         ))}
       </div>
 
-      <div className="calendar-grid calendar-grid-month">
+      <div
+        key={`${monthLabel}-${navDirection}`}
+        className={`calendar-grid calendar-grid-month calendar-grid-animated calendar-grid-${navDirection}`}
+      >
         {days.map((day) => (
           <article
             key={day.id}
