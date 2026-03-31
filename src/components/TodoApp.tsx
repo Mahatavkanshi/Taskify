@@ -65,6 +65,7 @@ export function TodoApp() {
   const [theme, setTheme] = useState<AppTheme>("light");
   const [completedDays, setCompletedDays] = useState<string[]>([]);
   const [focusTodoId, setFocusTodoId] = useState<string | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [draggingTodoId, setDraggingTodoId] = useState<string | null>(null);
   const hasHydrated = useRef(false);
   const importInputRef = useRef<HTMLInputElement | null>(null);
@@ -187,6 +188,26 @@ export function TodoApp() {
 
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
+
+  useEffect(() => {
+    function handleEscape(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (focusTodoId) {
+        setFocusTodoId(null);
+      }
+
+      if (isCalendarOpen) {
+        setIsCalendarOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [focusTodoId, isCalendarOpen]);
 
   const filteredTodos = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -646,6 +667,14 @@ export function TodoApp() {
                 <h2>{selectedCategoryTitle}</h2>
                 <p className="panel-copy">{selectedCategoryDescription}</p>
               </div>
+              <button
+                type="button"
+                className="calendar-trigger"
+                aria-label="Open calendar"
+                onClick={() => setIsCalendarOpen(true)}
+              >
+                <span aria-hidden="true">🗓</span>
+              </button>
             </div>
 
             <TodoComposer
@@ -682,7 +711,6 @@ export function TodoApp() {
             </div>
 
             <div className="insight-grid">
-              <TodoCalendar todos={filteredTodos} onOpenFocus={setFocusTodoId} />
               <TodoAnalytics todos={filteredTodos} completedDays={completedDays} />
             </div>
 
@@ -793,8 +821,8 @@ export function TodoApp() {
       </section>
 
       {focusTodo ? (
-        <div className="focus-overlay" role="dialog" aria-modal="true">
-          <div className="focus-card">
+        <div className="focus-overlay" role="dialog" aria-modal="true" onClick={() => setFocusTodoId(null)}>
+          <div className="focus-card modal-pop" onClick={(event) => event.stopPropagation()}>
             <div className="focus-head">
               <p className="panel-kicker">Focus mode</p>
               <button type="button" className="secondary-button" onClick={() => setFocusTodoId(null)}>
@@ -861,6 +889,28 @@ export function TodoApp() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isCalendarOpen ? (
+        <div className="focus-overlay" role="dialog" aria-modal="true" onClick={() => setIsCalendarOpen(false)}>
+          <div className="calendar-modal-card modal-pop" onClick={(event) => event.stopPropagation()}>
+            <div className="focus-head">
+              <div>
+                <p className="panel-kicker">Due date calendar</p>
+                <h3 className="calendar-modal-title">Plan by month</h3>
+              </div>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setIsCalendarOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <TodoCalendar todos={filteredTodos} onOpenFocus={setFocusTodoId} />
           </div>
         </div>
       ) : null}
