@@ -1,4 +1,11 @@
-import type { Todo, TodoCategory, TodoEnergy, TodoPriority, TodoSubtask } from "@/types/todo";
+import type {
+  Todo,
+  TodoCategory,
+  TodoEnergy,
+  TodoPriority,
+  TodoRecurrence,
+  TodoSubtask,
+} from "@/types/todo";
 
 export const categories = [
   { id: "work", label: "Work", emoji: "💼", tone: "tone-work" },
@@ -34,6 +41,15 @@ export const energyModes = [
   tone: string;
 }>;
 
+export const recurrenceModes = [
+  { id: "none", label: "No repeat" },
+  { id: "daily", label: "Daily" },
+  { id: "weekly", label: "Weekly" },
+  { id: "monthly", label: "Monthly" },
+] as const satisfies Array<{ id: TodoRecurrence; label: string }>;
+
+export const reminderOptions = [0, 10, 30, 60] as const;
+
 export type CategoryView = "all" | TodoCategory;
 
 export function normalizeCategory(category?: string): TodoCategory {
@@ -54,6 +70,18 @@ export function normalizeEnergy(energy?: string): TodoEnergy {
     : "quick-win";
 }
 
+export function normalizeRecurrence(recurrence?: string): TodoRecurrence {
+  return recurrenceModes.some((item) => item.id === recurrence)
+    ? (recurrence as TodoRecurrence)
+    : "none";
+}
+
+export function normalizeReminderMinutes(reminderMinutes?: number): number {
+  return reminderOptions.includes((reminderMinutes ?? 0) as (typeof reminderOptions)[number])
+    ? (reminderMinutes ?? 0)
+    : 0;
+}
+
 export function normalizeTodo(todo: Partial<Todo>): Todo {
   return {
     id: todo.id ?? crypto.randomUUID(),
@@ -65,6 +93,8 @@ export function normalizeTodo(todo: Partial<Todo>): Todo {
     category: normalizeCategory(todo.category),
     priority: normalizePriority(todo.priority),
     energy: normalizeEnergy(todo.energy),
+    recurrence: normalizeRecurrence(todo.recurrence),
+    reminderMinutes: normalizeReminderMinutes(todo.reminderMinutes),
     starred: Boolean(todo.starred),
     estimatedTime:
       typeof todo.estimatedTime === "string" && todo.estimatedTime.length > 0
@@ -91,6 +121,8 @@ export function createTodo(
   category: TodoCategory,
   priority: TodoPriority,
   energy: TodoEnergy,
+  recurrence: TodoRecurrence,
+  reminderMinutes: number,
   estimatedTime: string,
   notes: string,
 ): Todo {
@@ -104,6 +136,8 @@ export function createTodo(
     category,
     priority,
     energy,
+    recurrence,
+    reminderMinutes,
     starred: false,
     estimatedTime,
     notes,
@@ -121,6 +155,38 @@ export function getPriorityMeta(priority: TodoPriority) {
 
 export function getEnergyMeta(energy: TodoEnergy) {
   return energyModes.find((item) => item.id === energy) ?? energyModes[0];
+}
+
+export function getRecurrenceLabel(recurrence: TodoRecurrence): string {
+  return recurrenceModes.find((item) => item.id === recurrence)?.label ?? "No repeat";
+}
+
+export function shiftRecurringDate(dueDate: string, recurrence: TodoRecurrence): string {
+  if (!dueDate || recurrence === "none") {
+    return dueDate;
+  }
+
+  const [year, month, day] = dueDate.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return dueDate;
+  }
+
+  const nextDate = new Date(year, month - 1, day);
+
+  if (recurrence === "daily") {
+    nextDate.setDate(nextDate.getDate() + 1);
+  }
+
+  if (recurrence === "weekly") {
+    nextDate.setDate(nextDate.getDate() + 7);
+  }
+
+  if (recurrence === "monthly") {
+    nextDate.setMonth(nextDate.getMonth() + 1);
+  }
+
+  return nextDate.toISOString().slice(0, 10);
 }
 
 export function getTodayKey(): string {

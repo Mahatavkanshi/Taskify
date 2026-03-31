@@ -6,6 +6,8 @@ export type TodoPriority = "low" | "medium" | "high";
 
 export type TodoEnergy = "quick-win" | "deep-work" | "errand";
 
+export type TodoRecurrence = "none" | "daily" | "weekly" | "monthly";
+
 export type TodoSubtask = {
   id: string;
   title: string;
@@ -22,6 +24,8 @@ export type Todo = {
   category: TodoCategory;
   priority: TodoPriority;
   energy: TodoEnergy;
+  recurrence: TodoRecurrence;
+  reminderMinutes: number;
   starred: boolean;
   estimatedTime: string;
   notes: string;
