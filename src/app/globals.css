@@ -578,6 +578,10 @@ h1 {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(240, 252, 246, 0.92));
 }
 
+.calendar-card {
+  outline: none;
+}
+
 .calendar-head,
 .analytics-head {
   display: flex;
@@ -691,6 +695,20 @@ h1 {
   gap: 2px;
 }
 
+.calendar-dots {
+  display: flex;
+  gap: 5px;
+  min-height: 8px;
+  margin-top: 2px;
+}
+
+.calendar-dot {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 999px;
+  background: rgba(27, 87, 74, 0.2);
+}
+
 .calendar-date span,
 .calendar-date small,
 .calendar-empty,
@@ -722,6 +740,22 @@ h1 {
 .calendar-task strong {
   font-size: 0.86rem;
   text-align: left;
+}
+
+.calendar-dot.tone-work {
+  background: #256996;
+}
+
+.calendar-dot.tone-personal {
+  background: #b56026;
+}
+
+.calendar-dot.tone-study {
+  background: #6850b8;
+}
+
+.calendar-dot.tone-groceries {
+  background: #2e8852;
 }
 
 .analytics-pill {

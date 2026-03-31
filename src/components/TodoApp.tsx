@@ -573,6 +573,20 @@ export function TodoApp() {
     setDraggingTodoId(null);
   }
 
+  function moveTodoToDate(dateKey: string) {
+    if (!draggingTodoId) {
+      return;
+    }
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === draggingTodoId ? { ...todo, dueDate: dateKey } : todo,
+      ),
+    );
+    setDraggingTodoId(null);
+    showToast(`Moved task to ${dateKey}`);
+  }
+
   function exportTodos() {
     const payload = JSON.stringify(todos, null, 2);
     const blob = new Blob([payload], { type: "application/json" });
@@ -915,7 +929,11 @@ export function TodoApp() {
               </button>
             </div>
 
-            <TodoCalendar todos={filteredTodos} onOpenFocus={setFocusTodoId} />
+            <TodoCalendar
+              todos={filteredTodos}
+              onOpenFocus={setFocusTodoId}
+              onMoveTodoToDate={moveTodoToDate}
+            />
           </div>
         </div>
       ) : null}

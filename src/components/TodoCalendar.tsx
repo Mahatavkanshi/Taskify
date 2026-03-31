@@ -1,17 +1,50 @@
 import { getCategoryMeta } from "@/lib/todo-config";
+import type { DragEvent, KeyboardEvent } from "react";
 import type { Todo } from "@/types/todo";
 import { useMemo, useState } from "react";
 
 type TodoCalendarProps = {
   todos: Todo[];
   onOpenFocus: (id: string) => void;
+  onMoveTodoToDate: (dateKey: string) => void;
 };
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function TodoCalendar({ todos, onOpenFocus }: TodoCalendarProps) {
+export function TodoCalendar({ todos, onOpenFocus, onMoveTodoToDate }: TodoCalendarProps) {
   const [monthOffset, setMonthOffset] = useState(0);
   const [navDirection, setNavDirection] = useState<"forward" | "backward">("forward");
+
+  function goPreviousMonth() {
+    setNavDirection("backward");
+    setMonthOffset((current) => current - 1);
+  }
+
+  function goCurrentMonth() {
+    setNavDirection(monthOffset > 0 ? "backward" : "forward");
+    setMonthOffset(0);
+  }
+
+  function goNextMonth() {
+    setNavDirection("forward");
+    setMonthOffset((current) => current + 1);
+  }
+
+  function handleCalendarKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      goPreviousMonth();
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      goNextMonth();
+    }
+  }
+
+  function handleDayDragOver(event: DragEvent<HTMLElement>) {
+    event.preventDefault();
+  }
 
   const { days, monthLabel } = useMemo(() => {
     const now = new Date();
@@ -60,7 +93,7 @@ export function TodoCalendar({ todos, onOpenFocus }: TodoCalendarProps) {
   }, [monthOffset, todos]);
 
   return (
-    <section className="calendar-card">
+    <section className="calendar-card" tabIndex={0} onKeyDown={handleCalendarKeyDown}>
       <div className="calendar-head">
         <div>
           <p className="panel-kicker">Due date calendar</p>
@@ -69,29 +102,14 @@ export function TodoCalendar({ todos, onOpenFocus }: TodoCalendarProps) {
         <div className="calendar-nav">
           <button
             type="button"
-            onClick={() => {
-              setNavDirection("backward");
-              setMonthOffset((current) => current - 1);
-            }}
+            onClick={goPreviousMonth}
           >
             Prev
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setNavDirection(monthOffset > 0 ? "backward" : "forward");
-              setMonthOffset(0);
-            }}
-          >
+          <button type="button" onClick={goCurrentMonth}>
             Today
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setNavDirection("forward");
-              setMonthOffset((current) => current + 1);
-            }}
-          >
+          <button type="button" onClick={goNextMonth}>
             Next
           </button>
         </div>
@@ -113,11 +131,20 @@ export function TodoCalendar({ todos, onOpenFocus }: TodoCalendarProps) {
             className={`calendar-day${day.isCurrentMonth ? "" : " is-muted"}${
               day.isToday ? " is-today" : ""
             }`}
+            onDragOver={day.isCurrentMonth ? handleDayDragOver : undefined}
+            onDrop={day.isCurrentMonth ? () => onMoveTodoToDate(day.dateKey) : undefined}
           >
             {day.isCurrentMonth ? (
               <>
                 <div className="calendar-date">
                   <strong>{day.label}</strong>
+                  <span className="calendar-dots" aria-hidden="true">
+                    {day.tasks.slice(0, 3).map((todo) => {
+                      const categoryMeta = getCategoryMeta(todo.category);
+
+                      return <i key={todo.id} className={`calendar-dot ${categoryMeta.tone}`} />;
+                    })}
+                  </span>
                 </div>
 
                 <div className="calendar-items">
