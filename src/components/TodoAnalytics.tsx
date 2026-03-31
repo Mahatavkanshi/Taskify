@@ -26,6 +26,7 @@ export function TodoAnalytics({ todos, completedDays }: TodoAnalyticsProps) {
       ? 0
       : Math.round((todos.filter((todo) => todo.completed).length / todos.length) * 100);
   const deepWorkCount = todos.filter((todo) => todo.energy === "deep-work").length;
+  const recurringCount = todos.filter((todo) => todo.recurrence !== "none").length;
 
   const categoryBreakdown = categories.map((category) => {
     const count = todos.filter((todo) => todo.category === category.id).length;
@@ -56,6 +57,10 @@ export function TodoAnalytics({ todos, completedDays }: TodoAnalyticsProps) {
         <article>
           <strong>{completedDays.length}</strong>
           <span>logged days</span>
+        </article>
+        <article>
+          <strong>{recurringCount}</strong>
+          <span>recurring tasks</span>
         </article>
       </div>
 

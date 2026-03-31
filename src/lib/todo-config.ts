@@ -95,6 +95,7 @@ export function normalizeTodo(todo: Partial<Todo>): Todo {
     energy: normalizeEnergy(todo.energy),
     recurrence: normalizeRecurrence(todo.recurrence),
     reminderMinutes: normalizeReminderMinutes(todo.reminderMinutes),
+    snoozedUntil: typeof todo.snoozedUntil === "number" ? todo.snoozedUntil : null,
     starred: Boolean(todo.starred),
     estimatedTime:
       typeof todo.estimatedTime === "string" && todo.estimatedTime.length > 0
@@ -138,6 +139,7 @@ export function createTodo(
     energy,
     recurrence,
     reminderMinutes,
+    snoozedUntil: null,
     starred: false,
     estimatedTime,
     notes,

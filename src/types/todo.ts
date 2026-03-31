@@ -26,6 +26,7 @@ export type Todo = {
   energy: TodoEnergy;
   recurrence: TodoRecurrence;
   reminderMinutes: number;
+  snoozedUntil: number | null;
   starred: boolean;
   estimatedTime: string;
   notes: string;

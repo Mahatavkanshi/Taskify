@@ -82,6 +82,8 @@ export function TodoApp() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [draggingTodoId, setDraggingTodoId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkCategory, setBulkCategory] = useState<TodoCategory>("personal");
+  const [bulkPriority, setBulkPriority] = useState<TodoPriority>("medium");
   const [notificationPermission, setNotificationPermission] =
     useState<ReminderPermissionState>("default");
   const hasHydrated = useRef(false);
@@ -252,7 +254,9 @@ export function TodoApp() {
         return;
       }
 
-      const triggerAt = getDueDateTimestamp(todo.dueDate) - todo.reminderMinutes * 60 * 1000;
+      const triggerAt =
+        todo.snoozedUntil ??
+        (getDueDateTimestamp(todo.dueDate) - todo.reminderMinutes * 60 * 1000);
 
       if (triggerAt <= now || notifiedIdsRef.current.has(todo.id)) {
         return;
@@ -263,6 +267,11 @@ export function TodoApp() {
           body: `${todo.title} is due soon${todo.recurrence !== "none" ? ` (${getRecurrenceLabel(todo.recurrence)})` : ""}.`,
         });
         notifiedIdsRef.current.add(todo.id);
+        setTodos((currentTodos) =>
+          currentTodos.map((currentTodo) =>
+            currentTodo.id === todo.id ? { ...currentTodo, snoozedUntil: null } : currentTodo,
+          ),
+        );
       }, triggerAt - now);
 
       reminderTimeoutsRef.current[todo.id] = timeoutId;
@@ -496,6 +505,32 @@ export function TodoApp() {
     showToast("Completed selected tasks");
   }
 
+  function updateSelectedCategory() {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        selectedIds.includes(todo.id) ? { ...todo, category: bulkCategory } : todo,
+      ),
+    );
+    showToast("Updated category for selected tasks");
+  }
+
+  function updateSelectedPriority() {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        selectedIds.includes(todo.id) ? { ...todo, priority: bulkPriority } : todo,
+      ),
+    );
+    showToast("Updated priority for selected tasks");
+  }
+
   function deleteSelected() {
     if (selectedIds.length === 0) {
       return;
@@ -602,6 +637,7 @@ export function TodoApp() {
         title: `${sourceTodo.title} copy`,
         completed: false,
         starred: false,
+        snoozedUntil: null,
         createdAt: Date.now(),
         subtasks: sourceTodo.subtasks.map((subtask) => ({
           ...subtask,
@@ -755,6 +791,16 @@ export function TodoApp() {
       permission === "granted" ? "Browser reminders enabled" : "Reminder permission was not granted",
       permission === "granted" ? "success" : "info",
     );
+  }
+
+  function snoozeReminder(id: string, minutes: number) {
+    notifiedIdsRef.current.delete(id);
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === id ? { ...todo, snoozedUntil: Date.now() + minutes * 60 * 1000 } : todo,
+      ),
+    );
+    showToast(`Snoozed reminder for ${minutes} minutes`);
   }
 
   function triggerImport() {
@@ -962,6 +1008,23 @@ export function TodoApp() {
                 </button>
                 {selectedIds.length > 0 ? (
                   <>
+                    <select value={bulkCategory} onChange={(event) => setBulkCategory(event.target.value as TodoCategory)}>
+                      <option value="work">Work</option>
+                      <option value="personal">Personal</option>
+                      <option value="study">Study</option>
+                      <option value="groceries">Groceries</option>
+                    </select>
+                    <button type="button" className="secondary-button" onClick={updateSelectedCategory}>
+                      Set category
+                    </button>
+                    <select value={bulkPriority} onChange={(event) => setBulkPriority(event.target.value as TodoPriority)}>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                    <button type="button" className="secondary-button" onClick={updateSelectedPriority}>
+                      Set priority
+                    </button>
                     <button type="button" className="secondary-button" onClick={completeSelected}>
                       Complete selected
                     </button>
@@ -1076,6 +1139,11 @@ export function TodoApp() {
                 <button type="button" onClick={() => toggleTodo(focusTodo.id)}>
                   {focusTodo.completed ? "Mark active" : "Mark complete"}
                 </button>
+                {focusTodo.reminderMinutes > 0 ? (
+                  <button type="button" className="secondary-button" onClick={() => snoozeReminder(focusTodo.id, 10)}>
+                    Snooze 10m
+                  </button>
+                ) : null}
                 <button type="button" className="secondary-button" onClick={() => startEditing(focusTodo)}>
                   Edit task
                 </button>
