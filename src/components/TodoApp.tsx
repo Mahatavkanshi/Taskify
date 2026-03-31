@@ -228,6 +228,52 @@ export function TodoApp() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [focusTodoId, isCalendarOpen]);
 
+  useEffect(() => {
+    if (!("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      return;
+    }
+
+    setNotificationPermission(Notification.permission as ReminderPermissionState);
+  }, []);
+
+  useEffect(() => {
+    Object.values(reminderTimeoutsRef.current).forEach((timeoutId) => window.clearTimeout(timeoutId));
+    reminderTimeoutsRef.current = {};
+
+    if (notificationPermission !== "granted") {
+      return;
+    }
+
+    const now = Date.now();
+
+    todos.forEach((todo) => {
+      if (todo.completed || !todo.dueDate || todo.reminderMinutes <= 0) {
+        return;
+      }
+
+      const triggerAt = getDueDateTimestamp(todo.dueDate) - todo.reminderMinutes * 60 * 1000;
+
+      if (triggerAt <= now || notifiedIdsRef.current.has(todo.id)) {
+        return;
+      }
+
+      const timeoutId = window.setTimeout(() => {
+        new Notification("Taskify reminder", {
+          body: `${todo.title} is due soon${todo.recurrence !== "none" ? ` (${getRecurrenceLabel(todo.recurrence)})` : ""}.`,
+        });
+        notifiedIdsRef.current.add(todo.id);
+      }, triggerAt - now);
+
+      reminderTimeoutsRef.current[todo.id] = timeoutId;
+    });
+
+    return () => {
+      Object.values(reminderTimeoutsRef.current).forEach((timeoutId) => window.clearTimeout(timeoutId));
+      reminderTimeoutsRef.current = {};
+    };
+  }, [notificationPermission, todos]);
+
   const filteredTodos = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const byCategory =
@@ -353,12 +399,14 @@ export function TodoApp() {
       return;
     }
 
-    setTodos((currentTodos) => [createTodo(trimmedTitle, dueDate, category, priority, energy, estimatedTime, notes.trim()), ...currentTodos]);
+    setTodos((currentTodos) => [createTodo(trimmedTitle, dueDate, category, priority, energy, recurrence, reminderMinutes, estimatedTime, notes.trim()), ...currentTodos]);
     setTitle("");
     setDueDate("");
     setCategory("personal");
     setPriority("medium");
     setEnergy("quick-win");
+    setRecurrence("none");
+    setReminderMinutes(0);
     setEstimatedTime("30 min");
     setNotes("");
     showToast(`Added "${trimmedTitle}"`);
@@ -367,11 +415,33 @@ export function TodoApp() {
   function toggleTodo(id: string) {
     const targetTodo = todos.find((todo) => todo.id === id);
 
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) =>
+    setTodos((currentTodos) => {
+      const updatedTodos = currentTodos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
-      ),
-    );
+      );
+
+      if (!targetTodo || targetTodo.completed || targetTodo.recurrence === "none") {
+        return updatedTodos;
+      }
+
+      return [
+        {
+          ...targetTodo,
+          id: crypto.randomUUID(),
+          createdAt: Date.now(),
+          order: Date.now(),
+          dueDate: shiftRecurringDate(targetTodo.dueDate, targetTodo.recurrence),
+          completed: false,
+          starred: false,
+          subtasks: targetTodo.subtasks.map((subtask) => ({
+            ...subtask,
+            id: crypto.randomUUID(),
+            completed: false,
+          })),
+        },
+        ...updatedTodos,
+      ];
+    });
 
     if (targetTodo && !targetTodo.completed) {
       const todayKey = getTodayKey();
@@ -387,6 +457,53 @@ export function TodoApp() {
         todo.id === id ? { ...todo, starred: !todo.starred } : todo,
       ),
     );
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((currentIds) =>
+      currentIds.includes(id)
+        ? currentIds.filter((item) => item !== id)
+        : [...currentIds, id],
+    );
+  }
+
+  function toggleSelectAllVisible() {
+    const visibleIds = filteredTodos.map((todo) => todo.id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
+
+    setSelectedIds((currentIds) =>
+      allSelected
+        ? currentIds.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...currentIds, ...visibleIds])],
+    );
+  }
+
+  function completeSelected() {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        selectedIds.includes(todo.id) ? { ...todo, completed: true } : todo,
+      ),
+    );
+    setSelectedIds([]);
+    const todayKey = getTodayKey();
+    setCompletedDays((currentDays) =>
+      currentDays.includes(todayKey) ? currentDays : [todayKey, ...currentDays],
+    );
+    showToast("Completed selected tasks");
+  }
+
+  function deleteSelected() {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    setTodos((currentTodos) => currentTodos.filter((todo) => !selectedIds.includes(todo.id)));
+    setSelectedIds([]);
+    showToast("Deleted selected tasks", "info");
   }
 
   function toggleSubtask(todoId: string, subtaskId: string) {
